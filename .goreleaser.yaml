@@ -1,0 +1,55 @@
+---
+project_name: tnscli
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+    targets:
+      - linux_amd64
+      - darwin_amd64
+      - windows_amd64
+    ldflags:
+      - -s -w
+      - -X {{ .ProjectName }}/cmd.Version={{.Version}}
+      - -X {{ .ProjectName }}/cmd/.Commit={{.ShortCommit}}
+      - -X {{ .ProjectName }}/cmd.Date={{.Date}}
+      - -X {{ .ProjectName }}/cmd.Name={{.ProjectName}}
+
+changelog:
+  use: github
+  filters:
+    exclude:
+      - '^Merge branch'
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: 'Refactoring'
+      regexp: "^.*refactor[(\\w)]*:+.*$"
+      order: 2
+    - title: Others
+      order: 999
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+release:
+  github:
+    owner: tommi2day
+    name: tnscli
+  replace_existing_draft: true
+  draft: true
+  header: |
+    ## TNSCLI Release ({{ .Date }})

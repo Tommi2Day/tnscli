@@ -1,0 +1,9 @@
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+delete: olcAccess
+-
+add: olcAccess
+olcAccess: to attrs=userPassword,shadowLastChange by self write by dn="cn=admin,dc=oracle,dc=local" write by anonymous auth by * none
+olcAccess: to dn.subtree="dc=OracleContext,dc=oracle,dc=local" by self write  by group/groupOfUniqueNames/uniqueMember="cn=Dbas,ou=Groups,dc=oracle,dc=local" write by * read
+olcAccess: to * by self write by dn="cn=admin,dc=oracle,dc=local" write by * read
+
