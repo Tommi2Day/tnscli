@@ -1,8 +1,13 @@
 # tnscli
+
+Small Oracle TNS Service and Connect Test Tool
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/tommi2day/tnscli)](https://goreportcard.com/report/github.com/tommi2day/tnscli)
 ![CI](https://github.com/tommi2day/tnscli/actions/workflows/main.yml/badge.svg)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tommi2day/tnscli)
-tool for oracle tns functions
+
+
+## Features
 
 - connect to a given service using real connect method. 
 - Uses given credentials or default to raise an ORA-1017 error

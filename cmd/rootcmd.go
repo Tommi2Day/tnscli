@@ -32,7 +32,7 @@ var (
 	// RootCmd function to execute in tests
 	RootCmd = &cobra.Command{
 		Use:   "tnscli",
-		Short: "tnscli – small TNS Service check and Connect Tool",
+		Short: "tnscli – Small Oracle TNS Service and Connect Test Tool",
 		Long:  ``,
 	}
 
