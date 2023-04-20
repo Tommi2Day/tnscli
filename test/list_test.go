@@ -83,8 +83,6 @@ func TestParseTns(t *testing.T) {
 
 	//nolint gosec
 	err = os.WriteFile(tnsAdminDir+"/sqlnet.ora", []byte(sqlnetora), 0644)
-	//nolint gosec
-	err = os.WriteFile(tnsAdminDir+"/sqlnet.ora", []byte(sqlnetora), 0644)
 	require.NoErrorf(t, err, "Create test sqlnet.ora failed")
 	//nolint gosec
 	err = os.WriteFile(tnsAdminDir+"/tnsnames.ora", []byte(tnsnamesora), 0644)
