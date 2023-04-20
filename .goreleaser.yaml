@@ -53,3 +53,4 @@ release:
   draft: true
   header: |
     ## TNSCLI Release ({{ .Date }})
+  target_commitish: '{{ .Commit }}'
