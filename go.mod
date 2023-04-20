@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
-	github.com/tommi2day/gomodules v1.6.3
+	github.com/tommi2day/gomodules v1.6.4
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 )
 
