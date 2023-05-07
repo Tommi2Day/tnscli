@@ -17,7 +17,7 @@ Small Oracle TNS Service and Connect Test Tool
 **CAUTION**: Dont use anonymous checks for monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often
 ## Usage
 ```bash
-tnscli – small TNS Service and Connect Tool
+tnscli – Small Oracle TNS Service and Connect Test Tool
 
 Usage:                         
   tnscli [command]             

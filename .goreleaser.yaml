@@ -10,8 +10,10 @@ builds:
       - windows
     goarch:
       - amd64
+      - arm
     targets:
       - linux_amd64
+      - linux_arm
       - darwin_amd64
       - windows_amd64
     ldflags:
@@ -44,6 +46,42 @@ checksum:
 
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
+
+
+nfpms:
+  - id: deb-packages
+    # dont use {{ .ProjectName }} here :(
+    package_name: tnscli
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # builds:
+    license: GPL-3
+    bindir: /usr/bin
+    vendor: Tommi2Day
+    maintainer: "Tommi2Day <tommi2day@github.com>"
+    description: |-
+      Small Oracle TNS Service and Connect Test Tool
+    formats:
+      - deb
+    # dependencies:
+    provides:
+      # dont use {{ .ProjectName }} here :(
+      - tnscli
+
+  - id: rpm-packages
+    # dont use {{ .ProjectName }} here :(
+    package_name: tnscli
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # builds:
+    maintainer: "Tommi2Day <tommi2day@github.com>"
+    description: |-
+      Small Oracle TNS Service and Connect Test Tool
+    formats:
+      - rpm
+    # dependencies:
+    provides:
+      # dont use {{ .ProjectName }} here :(
+      - tnscli
+    # contents:
 
 release:
   github:
