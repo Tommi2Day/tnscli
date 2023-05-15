@@ -4,11 +4,11 @@ package test
 // https://intellij-support.jetbrains.com/hc/en-us/community/posts/360009685279-Go-test-working-directory-keeps-changing-to-dir-of-the-test-file-instead-of-value-in-template
 import (
 	"bytes"
+	tnscmd "github.com/tommi2day/tnscli/cmd"
 	"os"
 	"path"
 	"runtime"
 	"testing"
-	tnscmd "tnscli/cmd"
 
 	"github.com/sirupsen/logrus"
 )

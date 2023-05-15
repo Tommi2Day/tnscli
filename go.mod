@@ -1,4 +1,4 @@
-module tnscli
+module github.com/tommi2day/tnscli
 
 go 1.19
 

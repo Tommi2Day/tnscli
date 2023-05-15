@@ -2,7 +2,7 @@
 package main
 
 import (
-	"tnscli/cmd"
+	"github.com/tommi2day/tnscli/cmd"
 )
 
 func main() {
