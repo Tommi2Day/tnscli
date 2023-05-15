@@ -93,7 +93,19 @@ func ldapConnect() (lc *ldaplib.LdapConfigType, err error) {
 	if len(ldapBaseDN) == 0 && len(ldapOracleContext) > 0 {
 		ldapBaseDN = strings.ReplaceAll(ldapOracleContext, "cn=OracleContext,", "")
 	}
+	lc, err = doConnect(servers)
+	if err != nil {
+		log.Errorf("ldap connect failed:%s", err)
+		return
+	}
+	if ldapOracleContext == "" {
+		ldapOracleContext, err = getContext(lc)
+	}
+	return
+}
 
+// separate function to make gocyclo happy
+func doConnect(servers []dblib.LdapServer) (lc *ldaplib.LdapConfigType, err error) {
 	switch {
 	case ldapServer != "":
 		log.Debugf("Try to connect to Ldap Server %s, Port %d, TLS %v, Insecure %v", ldapServer, ldapPort, ldapTLS, ldapInsecure)
@@ -123,14 +135,6 @@ func ldapConnect() (lc *ldaplib.LdapConfigType, err error) {
 		}
 	default:
 		err = fmt.Errorf("no Ldap Servers configured")
-	}
-
-	if err != nil {
-		log.Errorf("ldap connect failed:%s", err)
-		return
-	}
-	if ldapOracleContext == "" {
-		ldapOracleContext, err = getContext(lc)
 	}
 	return
 }
