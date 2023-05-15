@@ -105,4 +105,24 @@ func TestOracleConnect(t *testing.T) {
 		assert.Errorf(t, err, "Check should fail")
 		assert.Contains(t, out, "Error: alias dummy not found", "Expected Message not found")
 	})
+	t.Run("CMD DBHOST Query", func(t *testing.T) {
+		out := ""
+		args := []string{
+			"check",
+			"--filename", filename,
+			"--service", alias,
+			"--dbhost",
+			"--user", DBUSER,
+			"--password", DBPASSWORD,
+			"--timeout", fmt.Sprintf("%d", TIMEOUT),
+			"--info",
+		}
+		out, err = cmdTest(args)
+		t.Logf(out)
+		assert.NoErrorf(t, err, "Check should succeed")
+		expect := fmt.Sprintf("service %s connected", alias)
+		assert.Contains(t, out, expect, "Expected connect Message not found")
+		expect = "Query returned"
+		assert.Contains(t, out, expect, "Expected Query Message not found")
+	})
 }

@@ -8,13 +8,23 @@ Small Oracle TNS Service and Connect Test Tool
 
 
 ## Features
-
 - connect to a given service using real connect method. 
 - Uses given credentials or default to raise an ORA-1017 error
 - search or list tns entries
 - load and write tnsnames.ora to ldap
 
-**CAUTION**: Dont use anonymous checks for monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often
+## Setup db test user
+**CAUTION**: Don't use anonymous checks for monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often. 
+set $TNSCLI_USER and TNSCLI_PASSWORD env or use --user and --password flag in check command instead. this users needs only a connect privilege
+### setup a common user within CDB$ROOT
+```sql
+alter session set container=cdb$root;
+create user c##tcheck identified by "<MyCheckPassword>"
+    default tablespace users temporary tablespace temp
+    account unlock container=all;
+grant connect to c##tcheck container=all;
+alter user c##tcheck default role all container=all;
+```
 ## Usage
 ```bash
 tnscli – Small Oracle TNS Service and Connect Test Tool
@@ -31,11 +41,8 @@ Available Commands:
   version     version print version string
 
 Flags:
-      --debug              verbose debug output
-  -f, --filename string    path to alternate tnsnames.ora
-  -h, --help               help for tnscli
-      --info               reduced info output
-  -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
+  -f, --filename string   path to tnsnames.ora (default "tnsnames.ora")
+  -h, --help              help for tnscli
 
 Use "tnscli [command] --help" for more information about a command.
 
@@ -43,6 +50,7 @@ tnscli check [flags]
 
 Flags:
   -a, --all               check all entries
+  -H, --dbhost            print current host:cdb:pdb
   -h, --help              help for check
   -p, --password string   Password for real connect or set TNSCLI_PASSWORD
   -s, --service string    service name to check
@@ -83,7 +91,6 @@ Flags:
 
 ```bash
 >tnscli -version
-tnscli version 3.0.1-next (snapshot - 2023-04-12T19:12:20Z)
 
 # list only service names for named tnsnames.ora
 >tnscli list -f test/testdata/connect.ora
@@ -125,6 +132,11 @@ XE.LOCAL=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT
 [Thu, 13 Apr 2023 21:23:37 CEST]  INFO service xe connected using user 'system' in 69ms
 
 OK, service XE.LOCAL reachable
+
+# find host, CDB and PDB to the givven service
+# this needs a proper login to the DB via --user/--password or TNSCLI_USER/TNSCLI_PASSWORD
+>tnscli check -H -A test/testdata XEPDB1.local
+XEPDB1.local -> localhost:XE:XEPDB1
 
 >tnscli ldap write --ldap.host=127.0.0.1 --ldap.port=1636 -T -I --ldap.base="dc=oracle,dc=local" --ldap.binddn="cn=admin,dc=oracle,dc=local" --ldap.bindpassword=admin  --ldap.timeout=20 --ldap.tnssource test/testdata/ldap_file_write.ora 
 Finished successfully. For details run with --info or --debug
