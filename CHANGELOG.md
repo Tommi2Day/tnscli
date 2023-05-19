@@ -1,5 +1,10 @@
 # Changelog tnscli
 
+## \[ v3.4.2 \] - 2023-05-19
+### Changed
+- update gomodules to v1.7.4
+- change goreleaser version date string and changelog
+
 ## \[ v3.4.1 \] - 2023-05-16
 ### Changed
 - update gomodules to v1.7.2
