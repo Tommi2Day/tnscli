@@ -20,11 +20,11 @@ builds:
       - -s -w
       - -X {{ .ProjectName }}/cmd.Version={{.Version}}
       - -X {{ .ProjectName }}/cmd/.Commit={{.ShortCommit}}
-      - -X {{ .ProjectName }}/cmd.Date={{.Date}}
+      - -X {{ .ProjectName }}/cmd.Date={{time "2006-01-02"}}
       - -X {{ .ProjectName }}/cmd.Name={{.ProjectName}}
 
 changelog:
-  use: github
+  use: git
   filters:
     exclude:
       - '^Merge branch'
@@ -90,5 +90,5 @@ release:
   replace_existing_draft: true
   draft: true
   header: |
-    ## TNSCLI Release ({{ .Date }})
+    ## TNSCLI Release {{ .Tag }} ({{ time "2006-01-02" }})
   target_commitish: '{{ .Commit }}'
