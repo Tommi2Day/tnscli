@@ -1,6 +1,6 @@
 module github.com/tommi2day/tnscli
 
-go 1.19
+go 1.20
 
 require (
 	github.com/boumenot/gocover-cobertura v1.2.0
