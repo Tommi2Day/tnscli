@@ -41,8 +41,12 @@ Available Commands:
   version     version print version string
 
 Flags:
-  -f, --filename string   path to tnsnames.ora (default "tnsnames.ora")
-  -h, --help              help for tnscli
+  -c, --config string      config file
+      --debug              verbose debug output
+  -f, --filename string    path to alternate tnsnames.ora
+  -h, --help               help for tnscli
+      --info               reduced info output
+  -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
 
 Use "tnscli [command] --help" for more information about a command.
 
@@ -60,7 +64,7 @@ Flags:
 tnscli list [flags]
 
 Flags:
-  -c, --complete        print complete entry
+  -C, --complete        print complete entry
   -h, --help            help for list
   -s, --search string   service name to check
 
@@ -138,36 +142,36 @@ OK, service XE.LOCAL reachable
 >tnscli check -H -A test/testdata XEPDB1.local
 XEPDB1.local -> localhost:XE:XEPDB1
 
->tnscli ldap write --ldap.host=127.0.0.1 --ldap.port=1636 -T -I --ldap.base="dc=oracle,dc=local" --ldap.binddn="cn=admin,dc=oracle,dc=local" --ldap.bindpassword=admin  --ldap.timeout=20 --ldap.tnssource test/testdata/ldap_file_write.ora 
+# write tnsnames.ora to ldap server (openldap with oid* schema extensions), all parameters via commandline
+>tnscli ldap write \
+  --ldap.host=127.0.0.1 \
+  --ldap.port=1636 -T -I \
+  --ldap.base="dc=oracle,dc=local" \
+  --ldap.oraclectx="dc=oracle,dc=local" \
+  --ldap.binddn="cn=admin,dc=oracle,dc=local" \
+  --ldap.bindpassword=admin  \
+  --ldap.timeout=20 \
+  --ldap.tnssource test/testdata/ldap_file_write.ora 
 Finished successfully. For details run with --info or --debug
 
->tnscli ldap read -T -I --ldap.binddn="cn=admin,dc=oracle,dc=local" --ldap.bindpassword=admin -A test/testdata --debug
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG ldapRead called
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG CTX: dc=oracle,dc=local, Servers [{localhost 1389 1636} {ldap 389 0}]
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG Try to use LDAP Server from ldap.ora
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG Try to connect to Ldap Server localhost, Port 1636
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG Connect to Ldap Server localhost, Port 1636
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG Found 2 TNS Ldap Entries
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG parsed Host: 127.0.0.1, Port 1521
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG found TNS Alias XE2.LOCAL
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG parsed Host: 127.0.0.1, Port 1521
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG found TNS Alias XE.LOCAL
-[Thu, 13 Apr 2023 21:47:31 CEST]  INFO Return 2 TNS Ldap Entries
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG write to StdOut
-[Thu, 13 Apr 2023 21:47:31 CEST] DEBUG list 2 entries
-XE.LOCAL=
+#read tnsnames.ora from ldap server with parameter via yaml and password via env
+>export TNSCLI_LDAP_BINDPASSWORD=admin
+>tnscli ldap read -T -I -c test/tnscli.yaml -A test/testdata 
+[Tue, 23 May 2023 17:23:27 CEST]  INFO Return 2 TNS Ldap Entries
+XE.LOCAL=  
         (DESCRIPTION =
                   (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
                   (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE))
         )
-
-XE2.LOCAL=
+  
+XE2.LOCAL=  
         (DESCRIPTION =
                   (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
                   (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE2))
         )
+  
+[Tue, 23 May 2023 17:23:27 CEST]  INFO SUCCESS: 2 LDAP entries found
 
-[Thu, 13 Apr 2023 21:47:31 CEST]  INFO SUCCESS: 2 LDAP entries found
 
 ```
 
