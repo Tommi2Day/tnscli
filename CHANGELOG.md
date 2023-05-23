@@ -1,5 +1,16 @@
 # Changelog tnscli
 
+## \[ v3.5.0 \] - 2023-05-22
+### New
+- add --config option to use a config file
+- use viper to handle parameter settings via config and environment variables
+### Changed
+- use golang 1.20
+- rename -c short parameter for complete in ldap list to -C
+- update pipeline to use ci-includes 15.0 and hardcode GITLAB_RUNNER to cloud
+### Fixed
+- dbhost query
+
 ## \[ v3.4.2 \] - 2023-05-19
 ### Changed
 - update gomodules to v1.7.4

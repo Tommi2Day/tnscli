@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/viper"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/tommi2day/gomodules/dblib"
@@ -64,7 +66,6 @@ var ldapTimeout = 20
 var tnsTarget = tnsAdmin + "/tnsnames.ora"
 
 func init() {
-	// don't have variables populated here
 	ldapCmd.PersistentFlags().StringVarP(&ldapServer, "ldap.host", "H", "", "Hostname of Ldap Server")
 	ldapCmd.PersistentFlags().IntVarP(&ldapPort, "ldap.port", "p", ldapPort, "ldapport to connect, 0 means TLS flag will decide")
 	ldapCmd.PersistentFlags().StringVarP(&ldapBaseDN, "ldap.base", "b", "", " Base DN to search from")
@@ -81,6 +82,36 @@ func init() {
 
 	ldapWriteCmd.Flags().StringVarP(&filename, "ldap.tnssource", "s", filename, "filename to read entries")
 	ldapCmd.AddCommand(ldapWriteCmd)
+}
+
+func initLdapConfig() {
+	if ldapServer == "" {
+		ldapServer = viper.GetString("ldap.host")
+	}
+	if ldapPort == 0 {
+		ldapPort = viper.GetInt("ldap.port")
+	}
+	if ldapBaseDN == "" {
+		ldapBaseDN = viper.GetString("ldap.base")
+	}
+	if ldapOracleContext == "" {
+		ldapOracleContext = viper.GetString("ldap.oraclectx")
+	}
+	if ldapBindDN == "" {
+		ldapBindDN = viper.GetString("ldap.binddn")
+	}
+	if ldapBindPassword == "" {
+		ldapBindPassword = viper.GetString("ldap.bindpassword")
+	}
+	if !ldapTLS {
+		ldapTLS = viper.GetBool("ldap.tls")
+	}
+	if ldapInsecure {
+		ldapInsecure = viper.GetBool("ldap.insecure")
+	}
+	if ldapTimeout == 0 {
+		ldapTimeout = viper.GetInt("ldap.timeout")
+	}
 }
 
 func ldapConnect() (lc *ldaplib.LdapConfigType, err error) {

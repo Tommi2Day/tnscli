@@ -34,7 +34,6 @@ DEFAULT_ADMIN_CONTEXT = "dc=oracle,dc=local"
 DIRECTORY_SERVERS = (localhost:1389:1636, ldap:389)
 DIRECTORY_SERVER_TYPE = OID
 `
-const ldapTimeout = 20
 
 func TestOracleLdap(t *testing.T) {
 	var err error
@@ -69,6 +68,7 @@ func TestOracleLdap(t *testing.T) {
 		args := []string{
 			"ldap",
 			"write",
+			"--ldap.oraclectx", LdapBaseDn,
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", sslport),
 			"--ldap.tls", "true",
@@ -77,7 +77,6 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.binddn", LdapAdminUser,
 			"--ldap.bindpassword", LdapAdminPassword,
 			"--ldap.tnssource", filename,
-			"--ldap.timeout", fmt.Sprintf("%d", ldapTimeout),
 			"--info",
 		}
 		out, err = cmdTest(args)
@@ -86,21 +85,18 @@ func TestOracleLdap(t *testing.T) {
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")
 	})
 
-	t.Run("Read TNS from Ldap", func(t *testing.T) {
+	t.Run("Read TNS from Ldap with config file and env", func(t *testing.T) {
 		tnsAdmin := TestData
 		filename := tnsAdmin + "/ldap_file_read.ora"
 		_ = os.Remove(filename)
+		_ = os.Setenv("TNSCLI_LDAP_BINDPASSWORD", LdapAdminPassword)
 		args := []string{
 			"ldap",
 			"read",
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", sslport),
-			"--ldap.tls", "true",
-			"--ldap.insecure", "true",
-			"--ldap.base", LdapBaseDn,
-			"--ldap.binddn", LdapAdminUser,
-			"--ldap.bindpassword", LdapAdminPassword,
 			"--ldap.tnstarget", filename,
+			"--config", TestDir + "/tnscli.yaml",
 			"--info",
 		}
 		out, err = cmdTest(args)

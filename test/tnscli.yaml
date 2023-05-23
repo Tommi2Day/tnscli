@@ -1,0 +1,14 @@
+app: "tnscli"
+info: true
+tns_admin: testdata
+
+ldap:
+ base: "dc=oracle,dc=local"
+ oraclectx: "dc=oracle,dc=local"
+ host: "localhost"
+ port: 1636
+ tls: true
+ insecure: true
+ binddn: "cn=admin,dc=oracle,dc=local"
+ #bindpassword: "admin"
+ timeout: 20
