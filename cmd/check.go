@@ -39,7 +39,6 @@ var a = false
 var dbhost = false
 
 func init() {
-	// don't have variables populated here
 	checkCmd.PersistentFlags().StringVarP(&dbUser, "user", "u", dbUser, "User for real connect or set TNSCLI_USER")
 	checkCmd.PersistentFlags().StringVarP(&dbPass, "password", "p", dbPass, "Password for real connect or set TNSCLI_PASSWORD")
 	checkCmd.Flags().StringVarP(&tnsKey, "service", "s", "", "service name to check")
@@ -206,7 +205,7 @@ func CheckWithOracle(dbuser string, dbpass string, tnsDesc string, timeout int) 
 		sql := "select to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') from dual"
 		if dbhost {
 			// extract host,cdb and pdb from database
-			sql = "select sys_context('USERENV','HOST')||':'||sys_context('USERENV','INSTANCE_NAME')||':'||nvl(sys_context('USERENV','CON_NAME'),'') as dbhost from dual"
+			sql = "select sys_context('USERENV','SERVER_HOST')||':'||sys_context('USERENV','INSTANCE_NAME')||':'||nvl(sys_context('USERENV','CON_NAME'),'') as dbhost from dual"
 		}
 		hostval, err = dblib.SelectOneStringValue(db, sql)
 		log.Infof("Query returned:  %s", hostval)
