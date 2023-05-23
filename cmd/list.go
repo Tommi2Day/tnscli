@@ -31,7 +31,7 @@ var complete = false
 func init() {
 	// don't have variables populated here
 	listCmd.Flags().StringVarP(&search, "search", "s", "", "search for tns name")
-	listCmd.Flags().BoolVarP(&complete, "complete", "c", false, "print complete entry")
+	listCmd.Flags().BoolVarP(&complete, "complete", "C", false, "print complete entry")
 	RootCmd.AddCommand(listCmd)
 }
 
