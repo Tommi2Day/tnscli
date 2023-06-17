@@ -72,33 +72,40 @@ func Execute() {
 }
 
 func initConfig() {
+	viper.SetConfigType(configType)
+	viper.SetConfigName(configName)
 	if cfgFile == "" {
-		// guess config file if not set.
+		// Use config file from the flag.
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		cfgFile = configName + "." + configType
-		// Search config in home directory with name "tnscli.yaml" (without extension).
-		viper.AddConfigPath(home + "/etc")
+
+		// Search config in home/etc and current directory).
+		etc := path.Join(home, "etc")
+		viper.AddConfigPath(etc)
 		viper.AddConfigPath(".")
+	} else {
+		// set filename form cli
+		viper.SetConfigFile(cfgFile)
 	}
 
-	viper.SetConfigFile(cfgFile)
-	viper.SetConfigType(configType)
-
 	// env var overrides
+	viper.AutomaticEnv() // read in environment variables that match
 	viper.SetEnvPrefix(configEnvPrefix)
 	// env var `LDAP_USERNAME` will be mapped to `ldap.username`
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
 
 	// If a config file is found, read it in.
 	err := viper.ReadInConfig()
+	haveConfig := false
 	if err == nil {
-		log.Debug("Using config file:", viper.ConfigFileUsed())
+		cfgFile = viper.ConfigFileUsed()
+		haveConfig = true
+		viper.Set("config", cfgFile)
+
 		if RootCmd.Flags().Lookup("debug").Changed {
 			viper.Set("debug", debugFlag)
 		}
@@ -119,17 +126,27 @@ func initConfig() {
 	case viper.GetBool("info"):
 		log.SetLevel(log.InfoLevel)
 	}
-	ta, err := dblib.CheckTNSadmin(viper.GetString("tns_admin"))
-	if err == nil {
-		tnsAdmin = ta
-	}
-	if filename == "" {
-		filename = path.Join(tnsAdmin, "tnsnames.ora")
-	}
 	logFormatter := &prefixed.TextFormatter{
 		ForceColors:     true,
 		FullTimestamp:   true,
 		TimestampFormat: time.RFC1123,
 	}
 	log.SetFormatter(logFormatter)
+
+	// debug config file
+	if haveConfig {
+		log.Debugf("found configfile %s", cfgFile)
+	} else {
+		log.Debugf("Error using %s config : %s", configType, err)
+	}
+
+	// fix tnsadmin settings
+	ta, err := dblib.CheckTNSadmin(viper.GetString("tns_admin"))
+	if err == nil {
+		tnsAdmin = ta
+		viper.Set("tns_admin", tnsAdmin)
+	}
+	if filename == "" {
+		filename = path.Join(tnsAdmin, "tnsnames.ora")
+	}
 }
