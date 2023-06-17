@@ -7,15 +7,16 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.4
 	github.com/golangci/golangci-lint v1.51.1
 	github.com/goreleaser/goreleaser v1.18.2
-	github.com/goreleaser/nfpm/v2 v2.28.0
+	github.com/goreleaser/nfpm/v2 v2.30.1
 	github.com/jstemmer/go-junit-report/v2 v2.0.0
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/sijms/go-ora/v2 v2.5.30
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
-	github.com/tommi2day/gomodules v1.7.4
+	github.com/stretchr/testify v1.8.4
+	github.com/tommi2day/gomodules v1.7.5
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 )
 
@@ -216,7 +217,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/orderedmap v0.2.0 // indirect
-	github.com/imdario/mergo v0.3.15 // indirect
+	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/invopop/jsonschema v0.7.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
@@ -231,8 +232,8 @@ require (
 	github.com/kisielk/errcheck v1.6.3 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.3 // indirect
-	github.com/klauspost/compress v1.16.3 // indirect
-	github.com/klauspost/pgzip v1.2.5 // indirect
+	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/kulti/thelper v0.6.3 // indirect
 	github.com/kunwardeep/paralleltest v1.0.6 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
@@ -257,7 +258,6 @@ require (
 	github.com/mgechev/revive v1.2.5 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect

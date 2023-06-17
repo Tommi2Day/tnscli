@@ -1,5 +1,12 @@
 # Changelog tnscli
 
+## \[ v3.5.1 \] - 2023-06-17
+### New
+- use $HOME/etc and current dir as config search path
+### Changed
+- update gomodules to v1.7.5 (fix tns_ldap functions)
+- Ldap OracleContext handling
+
 ## \[ v3.5.0 \] - 2023-05-22
 ### New
 - add --config option to use a config file
