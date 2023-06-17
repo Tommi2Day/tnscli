@@ -115,11 +115,10 @@ func initLdapConfig() {
 }
 
 func ldapConnect() (lc *ldaplib.LdapConfigType, err error) {
-	var ctx string
 	var servers []dblib.LdapServer
-	ctx, servers = dblib.ReadLdapOra(tnsAdmin)
-	if len(ldapOracleContext) == 0 && len(ctx) > 0 {
-		ldapOracleContext = ctx
+
+	if len(ldapOracleContext) == 0 {
+		ldapOracleContext, servers = dblib.ReadLdapOra(tnsAdmin)
 	}
 	if len(ldapBaseDN) == 0 && len(ldapOracleContext) > 0 {
 		ldapBaseDN = strings.ReplaceAll(ldapOracleContext, "cn=OracleContext,", "")
@@ -129,9 +128,18 @@ func ldapConnect() (lc *ldaplib.LdapConfigType, err error) {
 		log.Errorf("ldap connect failed:%s", err)
 		return
 	}
-	if ldapOracleContext == "" {
-		ldapOracleContext, err = getContext(lc)
+	// check
+	base := ldapBaseDN
+	if ldapOracleContext != "" {
+		base = ldapOracleContext
 	}
+	ldapOracleContext, err = dblib.GetOracleContext(lc, base)
+
+	// verify
+	if ldapOracleContext == "" {
+		err = fmt.Errorf("no Oracle Context found on base %s", ldapBaseDN)
+	}
+	log.Infof("Oracle Context selected: %s", ldapOracleContext)
 	return
 }
 
@@ -170,19 +178,13 @@ func doConnect(servers []dblib.LdapServer) (lc *ldaplib.LdapConfigType, err erro
 	return
 }
 
-func getContext(lc *ldaplib.LdapConfigType) (context string, err error) {
-	context, err = dblib.GetOracleContext(lc, ldapBaseDN)
-	if err != nil {
-		return
-	}
-	if context == "" {
-		err = fmt.Errorf("no Oracle Context found")
-	}
-	return
-}
 func ldapWrite() (err error) {
 	var tnsEntries dblib.TNSEntries
 	var domain string
+
+	// print version
+	version := GetVersion(false)
+	log.Info(version)
 
 	if filename == "" {
 		err = fmt.Errorf("no input file to load given")
