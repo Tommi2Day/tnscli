@@ -16,7 +16,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.4
-	github.com/tommi2day/gomodules v1.7.5
+	github.com/tommi2day/gomodules v1.8.0
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 )
 
@@ -275,6 +275,7 @@ require (
 	github.com/nunnatsa/ginkgolinter v0.8.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
