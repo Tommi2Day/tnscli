@@ -71,6 +71,7 @@ Flags:
 tnscli ldap [command]
 
 Available Commands:
+  clear       clear ldap tns entries
   read        prints ldap tns entries to stdout
   write       update ldap tns entries
 

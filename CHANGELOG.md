@@ -1,11 +1,15 @@
 # Changelog tnscli
 
-## \[ v3.5.1 \] - 2023-06-17
+## \[ v3.6.0 \] - 2023-06-19
 ### New
-- use $HOME/etc and current dir as config search path
+- add ldap clear command
 ### Changed
-- update gomodules to v1.7.5 (fix tns_ldap functions)
-- Ldap OracleContext handling
+- use $HOME/etc and current dir as config search path
+- update gomodules to v1.8.0
+- enhance ldap tests
+### Fixed
+- ldap write and ldap OracleContext handling
+- TNS list test
 
 ## \[ v3.5.0 \] - 2023-05-22
 ### New
@@ -14,7 +18,6 @@
 ### Changed
 - use golang 1.20
 - rename -c short parameter for complete in ldap list to -C
-- update pipeline to use ci-includes 15.0 and hardcode GITLAB_RUNNER to cloud
 ### Fixed
 - dbhost query
 
