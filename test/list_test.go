@@ -208,6 +208,7 @@ func TestParseTns(t *testing.T) {
 	t.Run("CMD List", func(t *testing.T) {
 		args := []string{
 			"list",
+			"-A", tnsAdminDir,
 			"--filename", filename,
 			"--search", "XE1",
 			"--info",
