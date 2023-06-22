@@ -4,6 +4,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -79,6 +80,7 @@ var ldapInsecure = false
 var ldapTLS = false
 var ldapTimeout = 20
 var tnsTarget = tnsAdmin + "/tnsnames.ora"
+var dropRe = regexp.MustCompile(`\..*$`)
 
 func init() {
 	ldapCmd.PersistentFlags().StringVarP(&ldapServer, "ldap.host", "H", "", "Hostname of Ldap Server")
@@ -295,41 +297,6 @@ func ldapClear() (err error) {
 	return
 }
 
-// buildstatus creates ops task map to handle
-func buildStatusMap(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, contextDN string) (dblib.TNSEntries, map[string]string, error) {
-	var alias string
-	ldapstatus := map[string]string{}
-
-	ldapTNS, err := dblib.ReadLdapTns(lc, contextDN)
-	if err != nil {
-		return nil, ldapstatus, err
-	}
-	for _, a := range ldapTNS {
-		alias = a.Name
-		ldapstatus[alias] = ""
-		log.Debugf("prepare status for LDAP Alias  %s", alias)
-	}
-
-	for _, t := range tnsEntries {
-		alias = t.Name
-		l, valid := ldapTNS[alias]
-		if valid {
-			comp := strings.Compare(l.Desc, t.Desc)
-			if comp == 0 {
-				ldapstatus[alias] = sOK
-				log.Debugf("TNS Alias %s exists in LDAP and is equal ->OK", alias)
-				continue
-			}
-			ldapstatus[alias] = sMod
-			log.Debugf("TNS Alias %s exists in LDAP, but description changed ->MOD", alias)
-		} else {
-			ldapstatus[alias] = sNew
-			log.Debugf("TNS Alias %s missed in LDAP ->NEW", alias)
-		}
-	}
-	return ldapTNS, ldapstatus, err
-}
-
 // ClearLdapTns deletes all oraclenet entries below given context
 func ClearLdapTns(lc *ldaplib.LdapConfigType, contextDN string) (ok int, fail int) {
 	var err error
@@ -381,6 +348,7 @@ func ClearLdapTns(lc *ldaplib.LdapConfigType, contextDN string) (ok int, fail in
 func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domain string, contextDN string) (TWorkStatus, error) {
 	var ldapstatus map[string]string
 	var ldapTNS dblib.TNSEntries
+	var tnsLow dblib.TNSEntries
 	var alias string
 	var err error
 	workStatus := make(TWorkStatus)
@@ -400,27 +368,36 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 		sortedAlias = append(sortedAlias, k)
 	}
 	sort.Strings(sortedAlias)
+
+	// align tns keys for comparing
+	tnsLow = make(dblib.TNSEntries, len(tnsEntries))
+	for _, v := range tnsEntries {
+		n := dropRe.ReplaceAllString(strings.ToLower(v.Name), "")
+		tnsLow[strings.ToLower(n)] = v
+	}
+
 	for _, alias = range sortedAlias {
 		status = ldapstatus[alias]
+		shortAlias := dropRe.ReplaceAllString(strings.ToLower(alias), "")
 		switch status {
 		case sOK:
 			log.Debugf("Alias %s unchanged", alias)
 			workStatus[sOK]++
 		case sNew:
-			tnsEntry, valid := tnsEntries[alias]
+			tnsEntry, valid := tnsLow[shortAlias]
 			if !valid {
-				log.Warnf("Skip add invalid tns alias %s", alias)
+				log.Warnf("Skip add invalid tns alias %s", shortAlias)
 				workStatus[sSkip]++
 				continue
 			}
-			err = dblib.AddLdapTNSEntry(lc, contextDN, tnsEntry.Name, tnsEntry.Desc)
+			err = dblib.AddLdapTNSEntry(lc, contextDN, shortAlias, tnsEntry.Desc)
 			if err != nil {
-				log.Warnf("Add %s failed: %v", tnsEntry.Name, err)
+				log.Warnf("Add %s failed: %v", shortAlias, err)
 				workStatus[sSkip]++
 				continue
 			}
 			workStatus[sNew]++
-			log.Debugf("Alias %s added", tnsEntry.Name)
+			log.Debugf("Alias %s added", shortAlias)
 		case sMod:
 			// delete and add
 			ldapEntry, valid := ldapTNS[alias]
@@ -430,18 +407,18 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 				continue
 			}
 			dn := ldapEntry.File
-			tnsEntry, valid := tnsEntries[alias]
+			tnsEntry, valid := tnsLow[shortAlias]
 			if !valid {
 				log.Warnf("Skip modify invalid tns alias %s", alias)
 				workStatus[sSkip]++
 				continue
 			}
-			err = dblib.ModifyLdapTNSEntry(lc, dn, tnsEntry.Name, tnsEntry.Desc)
+			err = dblib.ModifyLdapTNSEntry(lc, dn, shortAlias, tnsEntry.Desc)
 			if err != nil {
-				log.Warnf("Modify %s failed: %v", tnsEntry.Name, err)
+				log.Warnf("Modify %s failed: %v", shortAlias, err)
 				workStatus[sSkip]++
 			} else {
-				log.Debugf("Alias %s replaced", tnsEntry.Name)
+				log.Debugf("Alias %s modified", shortAlias)
 				workStatus[sMod]++
 			}
 		case "":
@@ -465,4 +442,42 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 	log.Infof("%d TNS entries unchanged,%d new written, %d modified, %d deleted and %d skipped because of errors",
 		workStatus[sOK], workStatus[sNew], workStatus[sMod], workStatus[sDel], workStatus[sSkip])
 	return workStatus, err
+}
+
+// buildstatus creates ops task map to handle
+func buildStatusMap(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, contextDN string) (dblib.TNSEntries, map[string]string, error) {
+	var alias string
+	ldapstatus := map[string]string{}
+
+	ldapTNS, err := dblib.ReadLdapTns(lc, contextDN)
+	if err != nil {
+		return nil, ldapstatus, err
+	}
+	for _, a := range ldapTNS {
+		alias = a.Name
+		ldapstatus[alias] = ""
+		log.Debugf("prepare status for LDAP Alias  %s", alias)
+	}
+
+	for _, t := range tnsEntries {
+		// strip domain from alias, only short ldap alias required
+		alias = t.Name
+		shortAlias := dropRe.ReplaceAllString(strings.ToLower(alias), "")
+
+		l, valid := ldapTNS[shortAlias]
+		if valid {
+			comp := strings.Compare(l.Desc, t.Desc)
+			if comp == 0 {
+				ldapstatus[shortAlias] = sOK
+				log.Debugf("TNS Alias %s exists in LDAP and is equal ->OK", alias)
+				continue
+			}
+			ldapstatus[shortAlias] = sMod
+			log.Debugf("TNS Alias %s exists in LDAP, but description changed ->MOD", alias)
+		} else {
+			ldapstatus[alias] = sNew
+			log.Debugf("TNS Alias %s missed in LDAP ->NEW", alias)
+		}
+	}
+	return ldapTNS, ldapstatus, err
 }
