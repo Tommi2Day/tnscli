@@ -12,6 +12,9 @@ Small Oracle TNS Service and Connect Test Tool
 - Uses given credentials or default to raise an ORA-1017 error
 - search or list tns entries
 - load and write tnsnames.ora to ldap
+- generates JDBC String for a service
+- list all affected RAC Hosts/Ports for a given service using DNS SRV entries or racinfo file
+- run a portcheck(TCP connect test) on all needed ports
 
 ## Setup db test user
 **CAUTION**: Don't use anonymous checks for monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often. 
@@ -25,6 +28,32 @@ create user c##tcheck identified by "<MyCheckPassword>"
 grant connect to c##tcheck container=all;
 alter user c##tcheck default role all container=all;
 ```
+### setup RAC Address info
+ORACLE address info can be provided with DNS SRV entries or a racinfo.ini file in $TNS_ADMIN directory.
+
+*racinfo.ini Format*
+```
+[RAC DNS Name as in tnsnames HOST Entry]
+san=scan-address:port
+vip1=vip-address1:port
+vip2=vip-address2:port
+...
+Example:
+[MYRAC.RAC.LAN]
+scan=myrac.rac.lan:1521
+vip1=vip1.rac.lan:1521
+vip2=vip2.rac.lan:1521
+vip3=vip3.rac.lan:1521
+``` 
+
+*DNS SRV Format:*
+```
+_myrac._tcp.rac.lan.  IN SRV 10 5 1521 myrac.rac.lan.
+_myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip1.rac.lan.
+_myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip2.rac.lan.
+_myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip3.rac.lan.
+```
+
 ## Usage
 ```bash
 tnscli – Small Oracle TNS Service and Connect Test Tool
@@ -33,11 +62,11 @@ Usage:
   tnscli [command]             
                                
 Available Commands:            
-  check       Check TNS Entries
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
   ldap        LDAP TNS Entries
   list        list TNS Entries
+  service     Service sub command
   version     version print version string
 
 Flags:
@@ -50,26 +79,88 @@ Flags:
 
 Use "tnscli [command] --help" for more information about a command.
 
-tnscli check [flags]
+tnscli service [command]
+
+Available Commands:
+  check       Check TNS Entries
+  info        give details for the given service
+  portcheck   try to connect each service and report if it is open or not
 
 Flags:
+  -h, --help             help for service
+  -s, --service string   service name to check
+
+
+tnscli service check [flags]
+Check all TNS Entries or one with real connect to database
+Flags:
   -a, --all               check all entries
-  -H, --dbhost            print current host:cdb:pdb
+  -H, --dbhost            print actual connected host:cdb:pdb
   -h, --help              help for check
   -p, --password string   Password for real connect or set TNSCLI_PASSWORD
-  -s, --service string    service name to check
   -t, --timeout int       timeout in sec (default 15)
   -u, --user string       User for real connect or set TNSCLI_USER
 
-tnscli list [flags]
+Global Flags:
+  -c, --config string      config file
+      --debug              verbose debug output
+  -f, --filename string    path to alternate tnsnames.ora
+      --info               reduced info output
+  -s, --service string     service name to check
+  -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
 
+
+tnscli service portcheck [flags]
+list defined host:port and checks if requested. If racinfo.ini or SRV info given,  addresses will be checked as well
+Flags:
+      --dnstcp              Use TCP to resolve DNS names
+  -h, --help                help for portcheck
+      --ipv4                resolve only IPv4 addresses
+  -n, --nameserver string   alternative nameserver to use for DNS lookup (IP:PORT)
+      --nodns               do not use DNS to resolve hostnames
+  -r, --racinfo string      path to racinfo.ini to resolve all RAC TCP Adresses, default $TNS_ADMIN/racinfo.ini
+  -t, --timeout int         timeout for tcp ping (default 5)
+
+
+tnscli service info [command]
+
+Available Commands:
+  jdbc        print tns entry as jdbc string
+  ports       list service addresses and ports
+  tns         print tns entry for the given service
+
+Flags:
+  -h, --help   help for info
+
+Global Flags:
+  -c, --config string      config file
+      --debug              verbose debug output
+  -f, --filename string    path to alternate tnsnames.ora
+      --info               reduced info output
+  -s, --service string     service name to check
+  -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
+
+tnscli service info ports [flags]
+list defined host:port and checks if requested. If racinfo.ini given, it will be listed as well
+Flags:
+      --dnstcp              Use TCP to resolve DNS names
+  -h, --help                help for ports
+      --ipv4                resolve only IPv4 addresses
+  -n, --nameserver string   alternative nameserver to use for DNS lookup (IP:PORT)
+      --nodns               do not use DNS to resolve hostnames
+  -r, --racinfo string      path to racinfo.ini to resolve all RAC TCP Adresses, default $TNS_ADMIN/racinfo.ini
+
+
+
+tnscli list [flags]
+list all TNS Entries or search one
 Flags:
   -C, --complete        print complete entry
   -h, --help            help for list
   -s, --search string   service name to check
 
 tnscli ldap [command]
-
+handle TNS entries stored in LDAP Server
 Available Commands:
   clear       clear ldap tns entries
   read        prints ldap tns entries to stdout
@@ -111,7 +202,43 @@ XE.LOCAL=  (DESCRIPTION=  (ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(
 >tnscli list --search  mydb
 Error: no alias with 'mydb' found
 
-# check for unavailable service with tnsnames.ora in $TNS_ADMIN
+# give tNS String for a service
+>tnscli service info tns xe -A test/testdata/
+XE.LOCAL=  (DESCRIPTION =
+          (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
+          (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE))
+  )
+
+#give jdbc string for a service
+>tnscli service info jdbc xe -A test/testdata/
+jdbc:Oracle:thin@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XE)))
+
+#give target host and port for a service
+>tnscli service info server xe -A test/testdata/
+127.0.0.1:1521
+
+# check if port is open for a service
+>tnscli service portcheck xe.local -A test/testdata
+127.0.0.1 (127.0.0.1:1521) is OPEN
+
+# give ALL target host and port for a service with RAC and DNS SRV resolution
+>tnscli service info ports myrac -f test/testdata/rac.ora --nameserver 127.0.0.1
+vip1.rac.lan (172.24.0.13:1521)
+vip3.rac.lan (172.24.0.15:1521)
+vip2.rac.lan (172.24.0.14:1521)
+myrac.rac.lan (172.24.0.3:1521)
+myrac.rac.lan (172.24.0.4:1521)
+myrac.rac.lan (172.24.0.5:1521)
+
+# static resolution with racinfo.ini without DNS. With DNS access hostnames will be resolved to IP addresses as above
+service info ports myrac -f test/testdata/rac.ora -r test/testdata/racinfo.ini --nodns
+myrac.rac.lan (myrac.rac.lan:1521)
+vip1.rac.lan (vip1.rac.lan:1521)
+vip2.rac.lan (vip2.rac.lan:1521)
+vip3.rac.lan (vip3.rac.lan:1521)
+
+
+# login check for unavailable service with tnsnames.ora in $TNS_ADMIN
 >tnscli check xe.local
 Error: service XE.LOCAL  NOT reached:dial tcp 127.0.0.1:1521: 
 
