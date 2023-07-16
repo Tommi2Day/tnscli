@@ -222,19 +222,14 @@ func ldapWrite() (err error) {
 	if err != nil {
 		return
 	}
-	var status TWorkStatus
-	status, err = WriteLdapTns(lc, tnsEntries, domain, contextDN)
+	// write to ldap
+	_, err = WriteLdapTns(lc, tnsEntries, domain, contextDN)
 	if err != nil {
 		err = fmt.Errorf("write to ldap failed: %v", err)
 		log.Error(err)
 		return
 	}
-	o := status[sOK]
-	n := status[sNew]
-	m := status[sMod]
-	d := status[sDel]
-	s := status[sSkip]
-	log.Infof("SUCCESS: '%s' written to LDAP - %d Entries Unchanged, New: %d, Mod: %d, Del: %d, Skip: %d\n", filename, o, n, m, d, s)
+	log.Infof("SUCCESS: '%s' written to LDAP\n", filename)
 	fmt.Println("Finished successfully. For details run with --info or --debug")
 	return
 }
@@ -397,7 +392,7 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 				continue
 			}
 			workStatus[sNew]++
-			log.Debugf("Alias %s added", shortAlias)
+			log.Infof("Alias %s added", shortAlias)
 		case sMod:
 			// delete and add
 			ldapEntry, valid := ldapTNS[alias]
@@ -418,7 +413,7 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 				log.Warnf("Modify %s failed: %v", shortAlias, err)
 				workStatus[sSkip]++
 			} else {
-				log.Debugf("Alias %s modified", shortAlias)
+				log.Infof("Alias %s modified", shortAlias)
 				workStatus[sMod]++
 			}
 		case "":
@@ -434,7 +429,7 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 				log.Warnf("Delete %s failed: %v", alias, err)
 				workStatus[sSkip]++
 			} else {
-				log.Debugf("Alias %s deleted", alias)
+				log.Infof("Alias %s deleted", alias)
 				workStatus[sDel]++
 			}
 		}
