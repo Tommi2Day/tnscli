@@ -71,7 +71,7 @@ var (
 )
 
 const defaultUser = "C##TCHECK"
-const defaultPassword = "C0nnectMe!now"
+const defaultPassword = "<MyCheckPassword>"
 
 var dbUser = ""
 var dbPass = ""
