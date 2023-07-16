@@ -1,0 +1,28 @@
+$TTL    1d ; default expiration time (in seconds) of all RRs without their own TTL value
+@       IN      SOA     ns1.rac.io. root.rac.lan. (
+                  3      ; Serial
+                  1d     ; Refresh
+                  1h     ; Retry
+                  1w     ; Expire
+                  1h )   ; Negative Cache TTL
+
+; name servers - NS records
+     IN      NS      ns1.rac.lan.
+
+; name servers - A records
+ns1.rac.lan.         IN      A      172.24.0.2
+
+myrac.rac.lan.       IN      A      172.24.0.3
+myrac.rac.lan.       IN      A      172.24.0.4
+myrac.rac.lan.       IN      A      172.24.0.5
+vip1.rac.lan.        IN      A      172.24.0.13
+vip2.rac.lan.        IN      A      172.24.0.14
+vip3.rac.lan.        IN      A      172.24.0.15
+
+; CNAME records
+
+; SRV records
+_myrac._tcp.rac.lan.  IN      SRV     10 5 1521 myrac.rac.lan.
+_myrac._tcp.rac.lan.  IN      SRV     10 5 1521 vip1.rac.lan.
+_myrac._tcp.rac.lan.  IN      SRV     10 5 1521 vip2.rac.lan.
+_myrac._tcp.rac.lan.  IN      SRV     10 5 1521 vip3.rac.lan.

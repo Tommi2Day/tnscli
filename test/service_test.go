@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,11 +47,10 @@ func TestOracleConnect(t *testing.T) {
 	require.True(t, found, "Alias not found")
 	desc := common.RemoveSpace(e.Desc)
 	t.Logf("Desc:%s", desc)
-
 	dbContainer, err := prepareContainer()
 	require.NoErrorf(t, err, "prepare Oracle Container failed")
 	require.NotNil(t, dbContainer, "Prepare failed")
-	defer destroyContainer(dbContainer)
+	defer common.DestroyDockerContainer(dbContainer)
 
 	t.Run("Direct connect", func(t *testing.T) {
 		var db *sql.DB
@@ -64,6 +64,7 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD Check with dummy", func(t *testing.T) {
 		out := ""
 		args := []string{
+			"service",
 			"check",
 			"--filename", filename,
 			"--service", alias,
@@ -79,6 +80,7 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD Check with real user", func(t *testing.T) {
 		out := ""
 		args := []string{
+			"service",
 			"check",
 			"--filename", filename,
 			"--service", alias,
@@ -96,6 +98,7 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD false Check", func(t *testing.T) {
 		out := ""
 		args := []string{
+			"service",
 			"check",
 			"--filename", filename,
 			"--service", "dummy",
@@ -108,6 +111,7 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD DBHOST Query", func(t *testing.T) {
 		out := ""
 		args := []string{
+			"service",
 			"check",
 			"--filename", filename,
 			"--service", alias,
@@ -124,5 +128,73 @@ func TestOracleConnect(t *testing.T) {
 		assert.Contains(t, out, expect, "Expected connect Message not found")
 		expect = "Query returned"
 		assert.Contains(t, out, expect, "Expected Query Message not found")
+	})
+	t.Run("CMD XE Port Info", func(t *testing.T) {
+		out := ""
+		args := []string{
+			"service",
+			"info",
+			"ports",
+			"--filename", filename,
+			"--service", alias,
+			"--info",
+			"--nodns",
+		}
+		out, err = cmdTest(args)
+		t.Logf(out)
+		assert.NoErrorf(t, err, "Check should succeed")
+		expect := fmt.Sprintf("Alias %s uses", alias)
+		assert.Contains(t, out, expect, "Expected Message not found")
+	})
+
+	t.Run("CMD JDBC info", func(t *testing.T) {
+		out := ""
+		args := []string{
+			"service",
+			"info",
+			"jdbc",
+			"--filename", filename,
+			"--service", alias,
+			"--info",
+		}
+		out, err = cmdTest(args)
+		t.Logf(out)
+		assert.NoErrorf(t, err, "Check should succeed")
+		expect := "jdbc:Oracle"
+		assert.Contains(t, out, expect, "Expected Message not found")
+	})
+	t.Run("CMD TNS info", func(t *testing.T) {
+		out := ""
+		args := []string{
+			"service",
+			"info",
+			"tns",
+			"--filename", filename,
+			"--service", alias,
+			"--info",
+		}
+		out, err = cmdTest(args)
+		t.Logf(out)
+		assert.NoErrorf(t, err, "Check should succeed")
+		expect := strings.ToUpper(alias)
+		assert.Contains(t, strings.ToUpper(out), expect, "Expected Message '%s' not found", expect)
+	})
+
+	t.Run("CMD Portcheck", func(t *testing.T) {
+		out := ""
+		args := []string{
+			"service",
+			"portcheck",
+			"--filename", filename,
+			"--service", alias,
+			"--info",
+			"--nodns",
+		}
+		out, err = cmdTest(args)
+		t.Logf(out)
+		assert.NoErrorf(t, err, "Check should succeed")
+		expect := dbhost
+		assert.Contains(t, out, expect, "Expected Message not found")
+		assert.Contains(t, out, "OPEN", "Port should be open")
 	})
 }
