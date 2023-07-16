@@ -2,11 +2,10 @@ package test
 
 import (
 	"fmt"
-	"net/url"
 	"os"
-	"strconv"
-	"strings"
 	"time"
+
+	"github.com/tommi2day/gomodules/common"
 
 	ldap "github.com/go-ldap/ldap/v3"
 	dockertest "github.com/ory/dockertest/v3"
@@ -18,12 +17,10 @@ const LdaprepoTag = "1.5.0"
 const LdapcontainerTimeout = 120
 
 var ldapcontainerName string
-var ldappool *dockertest.Pool
 var ldapContainer *dockertest.Resource
 
-// prepareContainer create an Oracle Docker Container
+// prepareContainer create an OpenLdap Docker Container
 func prepareLdapContainer() (container *dockertest.Resource, err error) {
-	var mypool *dockertest.Pool
 	if os.Getenv("SKIP_LDAP") != "" {
 		err = fmt.Errorf("skipping LDAP Container in CI environment")
 		return
@@ -32,22 +29,17 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 	if ldapcontainerName == "" {
 		ldapcontainerName = "tnscli-ldap"
 	}
-	mypool, err = dockertest.NewPool("")
-	if err != nil {
-		err = fmt.Errorf("cannot attach to docker: %v", err)
-		return
-	}
-	err = mypool.Client.Ping()
-	if err != nil {
-		err = fmt.Errorf("could not connect to Docker: %s", err)
-		return
-	}
 
+	var pool *dockertest.Pool
+	pool, err = common.GetDockerPool()
+	if err != nil {
+		return
+	}
 	vendorImagePrefix := os.Getenv("VENDOR_IMAGE_PREFIX")
 	repoString := vendorImagePrefix + Ldaprepo
 
 	fmt.Printf("Try to start docker container for %s:%s\n", repoString, LdaprepoTag)
-	container, err = mypool.RunWithOptions(&dockertest.RunOptions{
+	container, err = pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: repoString,
 		Tag:        LdaprepoTag,
 		Env: []string{
@@ -77,47 +69,24 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 		return
 	}
 
-	mypool.MaxWait = LdapcontainerTimeout * time.Second
-	myhost, myport := getLdapHostAndPort(container, "389/tcp")
+	pool.MaxWait = LdapcontainerTimeout * time.Second
+	myhost, myport := common.GetContainerHostAndPort(container, "389/tcp")
 	dialURL := fmt.Sprintf("ldap://%s:%d", myhost, myport)
 	fmt.Printf("Wait to successfully connect to Ldap with %s (max %ds)...\n", dialURL, LdapcontainerTimeout)
 	start := time.Now()
 	var l *ldap.Conn
-	if err = mypool.Retry(func() error {
+	if err = pool.Retry(func() error {
 		l, err = ldap.DialURL(dialURL)
 		return err
 	}); err != nil {
 		fmt.Printf("Could not connect to LDAP Container: %s", err)
 		return
 	}
-	l.Close()
+	_ = l.Close()
 	// wait 5s to init container
 	time.Sleep(5 * time.Second)
 	elapsed := time.Since(start)
 	fmt.Printf("LDAP Container is available after %s\n", elapsed.Round(time.Millisecond))
 	err = nil
-	ldappool = mypool
-	return
-}
-
-func destroyLdapContainer(container *dockertest.Resource) {
-	if err := ldappool.Purge(container); err != nil {
-		fmt.Printf("Could not purge resource: %s\n", err)
-	}
-}
-
-func getLdapHostAndPort(container *dockertest.Resource, portID string) (server string, port int) {
-	dockerURL := os.Getenv("DOCKER_HOST")
-	if dockerURL == "" {
-		containerAddress := container.GetHostPort(portID)
-		a := strings.Split(containerAddress, ":")
-		server = a[0]
-		port, _ = strconv.Atoi(a[1])
-	} else {
-		u, _ := url.Parse(dockerURL)
-		server = u.Hostname()
-		p := container.GetPort(portID)
-		port, _ = strconv.Atoi(p)
-	}
 	return
 }

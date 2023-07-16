@@ -1,5 +1,17 @@
 # Changelog tnscli
 
+## \[ v3.7.0 \] - 2023-07-16
+### New
+- add service info command  with ports, jdbc and tns subcommand
+- add rac vip addresses
+- add portcheck command
+### Changed
+- rename check command to service check subcommand
+- update dependencies
+- add more ldap info output
+- refactor docker tests
+- update gomodules to v1.9.0
+
 ## \[ v3.6.0 \] - 2023-06-19
 ### New
 - add ldap clear command

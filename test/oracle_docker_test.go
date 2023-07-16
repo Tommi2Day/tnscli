@@ -8,6 +8,7 @@ import (
 
 	dockertest "github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	"github.com/tommi2day/gomodules/common"
 )
 
 const port = "21521"
@@ -16,11 +17,9 @@ const repoTag = "21.3.0-slim"
 const containerTimeout = 600
 
 var containerName string
-var pool *dockertest.Pool
 
 // prepareContainer create an Oracle Docker Container
 func prepareContainer() (container *dockertest.Resource, err error) {
-	pool = nil
 	if os.Getenv("SKIP_ORACLE") != "" {
 		err = fmt.Errorf("skipping ORACLE Container in CI environment")
 		return
@@ -29,14 +28,9 @@ func prepareContainer() (container *dockertest.Resource, err error) {
 	if containerName == "" {
 		containerName = "tnscli-oracledb"
 	}
-	pool, err = dockertest.NewPool("")
+	var pool *dockertest.Pool
+	pool, err = common.GetDockerPool()
 	if err != nil {
-		err = fmt.Errorf("cannot attach to docker: %v", err)
-		return
-	}
-	err = pool.Client.Ping()
-	if err != nil {
-		err = fmt.Errorf("could not connect to Docker: %s", err)
 		return
 	}
 
@@ -91,10 +85,4 @@ func prepareContainer() (container *dockertest.Resource, err error) {
 	fmt.Printf("DB Container is available after %s\n", elapsed.Round(time.Millisecond))
 	err = nil
 	return
-}
-
-func destroyContainer(container *dockertest.Resource) {
-	if err := pool.Purge(container); err != nil {
-		fmt.Printf("Could not purge resource: %s\n", err)
-	}
 }

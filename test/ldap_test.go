@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/tommi2day/gomodules/common"
 	"github.com/tommi2day/gomodules/dblib"
 	"github.com/tommi2day/gomodules/ldaplib"
 	"github.com/tommi2day/tnscli/cmd"
@@ -87,8 +88,8 @@ func TestOracleLdap(t *testing.T) {
 	ldapContainer, err = prepareLdapContainer()
 	require.NoErrorf(t, err, "Ldap Server not available")
 	require.NotNil(t, ldapContainer, "Prepare failed")
-	defer destroyLdapContainer(ldapContainer)
-	server, sslport = getLdapHostAndPort(ldapContainer, "636/tcp")
+	defer common.DestroyDockerContainer(ldapContainer)
+	server, sslport = common.GetContainerHostAndPort(ldapContainer, "636/tcp")
 	// create test file to load
 	tnsAdmin := TestData
 	filename1 := tnsAdmin + "/ldap_file_write1.ora"
