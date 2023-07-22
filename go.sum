@@ -2666,8 +2666,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1
 github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tomarrell/wrapcheck/v2 v2.8.1 h1:HxSqDSN0sAt0yJYsrcYVoEeyM4aI9yAm3KQpIXDJRhQ=
 github.com/tomarrell/wrapcheck/v2 v2.8.1/go.mod h1:/n2Q3NZ4XFT50ho6Hbxg+RV1uyo2Uow/Vdm9NQcl5SE=
-github.com/tommi2day/gomodules v1.9.0 h1:VfJR46b7OwWnpHTMoBL2dVYtW8IUD+pnTPx3pZSUwhU=
-github.com/tommi2day/gomodules v1.9.0/go.mod h1:si/W+JmAig0q/v2dDpzIOQ2XQ29ATUqRsXbPDp95p8s=
+github.com/tommi2day/gomodules v1.9.1 h1:ak9d94RNicRbs6MNYr0r695Uve7Wtz1mRk5ja4TgSqs=
+github.com/tommi2day/gomodules v1.9.1/go.mod h1:si/W+JmAig0q/v2dDpzIOQ2XQ29ATUqRsXbPDp95p8s=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1 h1:NowYhSdyE/1zwK9QCLeRb6USWdoif80Ie+v+yU8u1Zw=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1/go.mod h1:WsUAkMJMYww6l/ufffCD3m+P7LEvr8TnZn9lwVDlgzw=
 github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 h1:nrZ3ySNYwJbSpD6ce9duiP+QkD3JuLCcWkdaehUS/3Y=
