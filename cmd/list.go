@@ -97,12 +97,13 @@ func formatEntry(entries dblib.TNSEntries, key string, full bool) (out string) {
 	if full {
 		entry := entries[key]
 		desc := entry.Desc
+		loc := entry.Location
 		tnsAlias := entry.Name
 		desc = strings.ReplaceAll(desc, "\r", " ")
 		desc = strings.ReplaceAll(desc, "\n", "\n  ")
 		desc = strings.ReplaceAll(desc, "(ADDRESS_LIST", "  (ADDRESS_LIST")
 		desc = strings.ReplaceAll(desc, "(CONNECT_DATA", "  (CONNECT_DATA")
-		out = fmt.Sprintf("%s=  %s", tnsAlias, desc)
+		out = fmt.Sprintf("# Location: %s \n%s=  %s", loc, tnsAlias, desc)
 	} else {
 		out = fmt.Sprintf("%s\n", key)
 	}

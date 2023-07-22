@@ -239,11 +239,12 @@ func getTnsInfo(_ *cobra.Command, args []string) (err error) {
 	if err == nil {
 		desc := entry.Desc
 		tnsAlias := entry.Name
+		loc := entry.Location
 		desc = strings.ReplaceAll(desc, "\r", " ")
 		desc = strings.ReplaceAll(desc, "\n", "\n  ")
 		desc = strings.ReplaceAll(desc, "(ADDRESS_LIST", "  (ADDRESS_LIST")
 		desc = strings.ReplaceAll(desc, "(CONNECT_DATA", "  (CONNECT_DATA")
-		out := fmt.Sprintf("%s=  %s", tnsAlias, desc)
+		out := fmt.Sprintf("# Location: %s \n%s=  %s", loc, tnsAlias, desc)
 		log.Infof(out)
 		fmt.Println(out)
 	}
@@ -356,10 +357,10 @@ func singleCheck(args []string, tnsEntries dblib.TNSEntries, domain string) (err
 
 	if entry, found := dblib.GetEntry(tnsKey, tnsEntries, domain); found {
 		desc := entry.Desc
-		file := entry.File
+		location := entry.Location
 		tnsAlias := entry.Name
 		con := ""
-		log.Debugf("connect service %s from %s, timeout: %d s", tnsAlias, file, timeout)
+		log.Debugf("connect service %s from %s, timeout: %d s", tnsAlias, location, timeout)
 		log.Infof("use entry \n%s=%s\n", tnsAlias, strings.ReplaceAll(desc, "\r", " "))
 		ok, elapsed, hostval, errmsg := CheckWithOracle(dbUser, dbPass, desc, timeout)
 		if len(dbUser) > 0 {

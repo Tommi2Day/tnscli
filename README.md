@@ -195,6 +195,7 @@ XE.LOCAL
 
 # list entries with full description 
 >tnscli list --complete -f test/testdata/connect.ora 
+# Location: test/testdata/connect.ora Line: 1
 XE.LOCAL=  (DESCRIPTION=  (ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=21521)))  (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))
 
 
@@ -204,6 +205,7 @@ Error: no alias with 'mydb' found
 
 # give tNS String for a service
 >tnscli service info tns xe -A test/testdata/
+# Location: ifile.ora Line: 6 
 XE.LOCAL=  (DESCRIPTION =
           (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
           (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE))
