@@ -186,11 +186,15 @@ func TestParseTns(t *testing.T) {
 		e, ok := dblib.GetEntry(alias, tnsEntries, domain)
 		assert.True(t, ok, "Alias %s not found", alias)
 		actualDesc := e.Desc
+		location := e.Location
+		expectedLocation := "ifile.ora Line: 6"
 		expectedDesc := `(DESCRIPTION =
 	(ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
 	(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE))
 )`
 		assert.Equal(t, strings.TrimSpace(expectedDesc), strings.TrimSpace(actualDesc), "Description not expected")
+		assert.Equal(t, expectedLocation, location, "Location not expected")
+		t.Logf("Location: %s", e.Location)
 	})
 	t.Run("Check Server Entry", func(t *testing.T) {
 		e, found := tnsEntries[alias]
