@@ -319,7 +319,7 @@ func ClearLdapTns(lc *ldaplib.LdapConfigType, contextDN string) (ok int, fail in
 
 	// loop
 	for _, e := range ldapEntries {
-		dn := e.File
+		dn := e.Location
 		alias := e.Name
 		// check dn
 		if dn != "" && strings.HasPrefix(dn, "cn=") {
@@ -401,7 +401,7 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 				workStatus[sSkip]++
 				continue
 			}
-			dn := ldapEntry.File
+			dn := ldapEntry.Location
 			tnsEntry, valid := tnsLow[shortAlias]
 			if !valid {
 				log.Warnf("Skip modify invalid tns alias %s", alias)
@@ -423,7 +423,7 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 				workStatus[sSkip]++
 				continue
 			}
-			dn := ldapEntry.File
+			dn := ldapEntry.Location
 			err = dblib.DeleteLdapTNSEntry(lc, dn, alias)
 			if err != nil {
 				log.Warnf("Delete %s failed: %v", alias, err)
