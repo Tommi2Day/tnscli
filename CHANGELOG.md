@@ -1,5 +1,11 @@
 # Changelog tnscli
 
+## [v3.7.5 - 2023-07-27]
+### New
+- add no-color switch to explicit disable colored output
+### Changed
+- refactor config file handling
+
 ## \[ v3.7.0 \] - 2023-07-16
 ### New
 - add service info command  with ports, jdbc and tns subcommand

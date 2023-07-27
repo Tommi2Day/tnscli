@@ -42,10 +42,11 @@ var (
 	oracleHome = common.GetEnv("ORACLE_HOME", "/opt/oracle")
 	tnsAdmin   = common.GetEnv("TNS_ADMIN", path.Join(oracleHome, "network", "admin"))
 
-	filename  = ""
-	debugFlag = false
-	infoFlag  = false
-	cfgFile   = ""
+	filename       = ""
+	debugFlag      = false
+	infoFlag       = false
+	cfgFile        = ""
+	noLogColorFlag = false
 )
 
 func init() {
@@ -56,6 +57,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&tnsAdmin, "tns_admin", "A", tnsAdmin, "TNS_ADMIN directory")
 	RootCmd.PersistentFlags().StringVarP(&filename, "filename", "f", "", "path to alternate tnsnames.ora")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
+	RootCmd.PersistentFlags().BoolVarP(&noLogColorFlag, "no-color", "", false, "disable colored log output")
 	RootCmd.MarkFlagsMutuallyExclusive("debug", "info")
 
 	if err := viper.BindPFlags(RootCmd.PersistentFlags()); err != nil {
@@ -83,7 +85,7 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home/etc and current directory).
+		// Search config in $HOME/etc and current directory.
 		etc := path.Join(home, "etc")
 		viper.AddConfigPath(etc)
 		viper.AddConfigPath(".")
@@ -99,23 +101,8 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// If a config file is found, read it in.
-	err := viper.ReadInConfig()
-	haveConfig := false
-	if err == nil {
-		cfgFile = viper.ConfigFileUsed()
-		haveConfig = true
-		viper.Set("config", cfgFile)
+	haveConfig, err := processConfig()
 
-		if RootCmd.Flags().Lookup("debug").Changed {
-			viper.Set("debug", debugFlag)
-		}
-		if RootCmd.Flags().Lookup("info").Changed {
-			viper.Set("info", infoFlag)
-		}
-		if RootCmd.Flags().Lookup("tns_admin").Changed {
-			viper.Set("tns_admin", tnsAdmin)
-		}
-	}
 	// logger settings
 	log.SetLevel(log.ErrorLevel)
 	switch {
@@ -127,7 +114,7 @@ func initConfig() {
 		log.SetLevel(log.InfoLevel)
 	}
 	logFormatter := &prefixed.TextFormatter{
-		ForceColors:     true,
+		DisableColors:   noLogColorFlag,
 		FullTimestamp:   true,
 		TimestampFormat: time.RFC1123,
 	}
@@ -149,4 +136,29 @@ func initConfig() {
 	if filename == "" {
 		filename = path.Join(tnsAdmin, "tnsnames.ora")
 	}
+}
+
+// processConfig reads in config file and ENV variables if set.
+func processConfig() (bool, error) {
+	err := viper.ReadInConfig()
+	haveConfig := false
+	if err == nil {
+		cfgFile = viper.ConfigFileUsed()
+		haveConfig = true
+		viper.Set("config", cfgFile)
+
+		if RootCmd.Flags().Lookup("debug").Changed {
+			viper.Set("debug", debugFlag)
+		}
+		if RootCmd.Flags().Lookup("info").Changed {
+			viper.Set("info", infoFlag)
+		}
+		if RootCmd.Flags().Lookup("no-color").Changed {
+			viper.Set("no-color", noLogColorFlag)
+		}
+		if RootCmd.Flags().Lookup("tns_admin").Changed {
+			viper.Set("tns_admin", tnsAdmin)
+		}
+	}
+	return haveConfig, err
 }

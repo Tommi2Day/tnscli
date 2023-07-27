@@ -16,43 +16,61 @@ Small Oracle TNS Service and Connect Test Tool
 - list all affected RAC Hosts/Ports for a given service using DNS SRV entries or racinfo file
 - run a portcheck(TCP connect test) on all needed ports
 
-## Setup db test user
-**CAUTION**: Don't use anonymous checks for monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often. 
-set $TNSCLI_USER and TNSCLI_PASSWORD env or use --user and --password flag in check command instead. this users needs only a connect privilege
-### setup a common user within CDB$ROOT
-```sql
-alter session set container=cdb$root;
-create user c##tcheck identified by "<MyCheckPassword>"
-    default tablespace users temporary tablespace temp
-    account unlock container=all;
-grant connect to c##tcheck container=all;
-alter user c##tcheck default role all container=all;
-```
-### setup RAC Address info
+## Setup
+### recommanded: setup db test user
+**CAUTION**: Don't use anonymous checks for permanent monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often. 
+Instead, set $TNSCLI_USER and TNSCLI_PASSWORD env or use --user and --password flag in check command to connect an existing user. This user needs only a connect privilege.
+Replace `c##tcheck`, `tcheck` and `<MyCheckPassword>` with your own secrets
+-   **sample for set up a common user within CDB$ROOT**
+ 
+    ```sql
+    alter session set container=cdb$root;
+    create user c##tcheck identified by "<MyCheckPassword>"
+        default tablespace users temporary tablespace temp
+        account unlock container=all;
+    grant connect to c##tcheck container=all;
+    alter user c##tcheck default role all container=all;
+    ```
+-   **sample for set up a traditional (non-cdb) user **
+    ```sql
+    create user tcheck identified by "<MyCheckPassword>"
+        default tablespace users temporary tablespace temp
+        account unlock;
+    grant connect to tcheck;
+    alter user c##tcheck default role all container=all;
+    ```
+- export user secrets to environment
+  ```bash
+  export TNSCLI_USER="c##tcheck" # or 
+  # export TNSCLI_USER="tcheck"
+  export TNSCLI_PASSWORD="<MyCheckPassword>"
+  ``` 
+### optional: setup RAC Address info
 ORACLE address info can be provided with DNS SRV entries or a racinfo.ini file in $TNS_ADMIN directory.
 
-*racinfo.ini Format*
-```
-[RAC DNS Name as in tnsnames HOST Entry]
-san=scan-address:port
-vip1=vip-address1:port
-vip2=vip-address2:port
-...
-Example:
-[MYRAC.RAC.LAN]
-scan=myrac.rac.lan:1521
-vip1=vip1.rac.lan:1521
-vip2=vip2.rac.lan:1521
-vip3=vip3.rac.lan:1521
-``` 
+-   *DNS SRV format:*
+    ```
+    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 myrac.rac.lan.
+    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip1.rac.lan.
+    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip2.rac.lan.
+    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip3.rac.lan.
+    ```
 
-*DNS SRV Format:*
-```
-_myrac._tcp.rac.lan.  IN SRV 10 5 1521 myrac.rac.lan.
-_myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip1.rac.lan.
-_myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip2.rac.lan.
-_myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip3.rac.lan.
-```
+-   *racinfo.ini format*
+    ```
+    [RAC DNS Name as in tnsnames HOST Entry]
+    san=scan-address:port
+    vip1=vip-address1:port
+    vip2=vip-address2:port
+    ...
+    Example:
+    [MYRAC.RAC.LAN]
+    scan=myrac.rac.lan:1521
+    vip1=vip1.rac.lan:1521
+    vip2=vip2.rac.lan:1521
+    vip3=vip3.rac.lan:1521
+    ``` 
+
 
 ## Usage
 ```bash
@@ -75,6 +93,7 @@ Flags:
   -f, --filename string    path to alternate tnsnames.ora
   -h, --help               help for tnscli
       --info               reduced info output
+      --no-color           disable colored log output
   -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
 
 Use "tnscli [command] --help" for more information about a command.
