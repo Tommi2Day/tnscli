@@ -47,6 +47,12 @@ checksum:
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 
+archives:
+  - id: archive
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
 
 nfpms:
   - id: deb-packages
