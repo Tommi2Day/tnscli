@@ -24,7 +24,7 @@ var networkCreated = false
 var dnsserver = ""
 var dnsport = 0
 
-// prepareDNSContainer create an Bind9 Docker Container
+// prepareDNSContainer create a Bind9 Docker Container
 func prepareDNSContainer() (container *dockertest.Resource, err error) {
 	if os.Getenv("SKIP_DNS") != "" {
 		err = fmt.Errorf("skipping DNS Container in CI environment")
@@ -32,7 +32,7 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 	}
 	dnscontainerName = os.Getenv("DNS_CONTAINER_NAME")
 	if dnscontainerName == "" {
-		dnscontainerName = "dblib-bind9"
+		dnscontainerName = "tnscli-bind9"
 	}
 	var pool *dockertest.Pool
 	pool, err = common.GetDockerPool()
