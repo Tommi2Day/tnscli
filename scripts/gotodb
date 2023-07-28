@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# ssh to host running oracle service
+# retrieve host name delivered by dbhost command
+# set final hostname via .ssh/config
+
+WD=$(dirname "$0")
+export PATH=$PATH:$WD
+unset DEBUG
+DB=$1
+O=${2:+-o}
+
+DBDATA=$(dbhost "$DB" )
+if [ -z "$DBDATA" ]; then
+        echo "Cannot extract host info"
+        exit 1
+fi
+DBDATA=${DBDATA#*-> }
+HOST=$(echo "$DBDATA"|cut -d: -f1)
+HOST=${HOST%%.*}
+INST=$(echo "$DBDATA"|cut -d: -f2)
+
+echo "connect to $HOST, Instance: $INST"
+ssh "${HOST}$O"
+

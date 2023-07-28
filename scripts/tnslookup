@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# search a service and print details
+
+SEARCH=$1
+
+if [ "$SEARCH" = "" ]; then
+    echo "search a service and print details"
+    echo "Usage: $0 <service or part>"
+    exit 1
+fi
+
+if [ "$DEBUG" = "1" ]; then
+    DEBUG="--debug"
+fi
+tnscli list --complete --search "$SEARCH" $DEBUG

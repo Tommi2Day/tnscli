@@ -19,7 +19,7 @@ Small Oracle TNS Service and Connect Test Tool
 ## Setup
 ### recommanded: setup db test user
 **CAUTION**: Don't use anonymous checks for permanent monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often. 
-Instead, set $TNSCLI_USER and TNSCLI_PASSWORD env or use --user and --password flag in check command to connect an existing user. This user needs only a connect privilege.
+Instead, set $TNSCLI_USER and TNSCLI_PASSWORD env or use --user and --password flag in check command to connect an existing user. This user needs only a `connect` privilege.
 Replace `c##tcheck`, `tcheck` and `<MyCheckPassword>` with your own secrets
 -   **sample for set up a common user within CDB$ROOT**
  
@@ -323,9 +323,49 @@ XE2.LOCAL=
 
 
 ```
+
+## tnscli addon scripts
+
+there are some additional helper scripts available in `/scripts`
+
+### dbhost
+`dbhost` is a shortcut for `tnscli service check <service> --dbhost` command. it tries to connect to the given service using default user (or set TNSCLI_USER and TNSCLI_PASSWORD)
+to get host:cdb:pdb from oracle session sys_context
+```bash
+  >export TNSCLI_USER="c##tcheck" # or 
+  # export TNSCLI_USER="tcheck"
+  >export TNSCLI_PASSWORD="<MyCheckPassword>"
+  >dbhost MYPDB1
+   
+  racnode1:MYCDB:PDB1
+  ``` 
+### gotodb
+gotodb use dbhost to extract the server hostname from the connection and raises an ssh command to this host. 
+Make sure both, tnscli and dbhost can be found in path 
+If the returned hostname is not a valid dns name you may use of `.ssh/config` to match host user and ssh key
+```
+host racnode1
+        HostName racnode1.rac.lan
+        User oracle
+        IdentityFile ~/.ssh/id_ora
+```
+```bash
+>gotodb MYPDB1
+oracle@racnode1 ~>
+```
+### tnslookup
+
+`tnslookup` is a shortcut for the `tnscli list --search <service> --complete` command
+```bash
+>tnslookup mypdb1
+
+Location: /etc/oracle/tnsnames.ora Line: 6
+MYPDB1.LOCAL=  (DESCRIPTION =
+(ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=myrac.rac.lan)(PORT=1521)))
+(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = PDB1))
+)
+```
 ## Virus Warnings
 
 some engines are reporting a virus in the binaries. This is a false positive. You may check the binaries with meta engines such as [virustotal.com](https://www.virustotal.com/gui/home/upload) or build your own binary from source. I have no glue why this happens.
-
-
 

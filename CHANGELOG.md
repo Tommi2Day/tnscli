@@ -1,8 +1,9 @@
 # Changelog tnscli
 
-## [v3.7.5 - 2023-07-27]
+# [v3.7.6 - 2023-07-28]
 ### New
 - add no-color switch to explicit disable colored output
+- add helper scripts
 ### Changed
 - refactor config file handling
 

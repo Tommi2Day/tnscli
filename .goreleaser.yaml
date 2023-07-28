@@ -72,6 +72,9 @@ nfpms:
     provides:
       # dont use {{ .ProjectName }} here :(
       - tnscli
+    contents:
+      - src: scripts/*
+        dst: /usr/local/bin
 
   - id: rpm-packages
     # dont use {{ .ProjectName }} here :(
@@ -87,7 +90,9 @@ nfpms:
     provides:
       # dont use {{ .ProjectName }} here :(
       - tnscli
-    # contents:
+    contents:
+      - src: scripts/*
+        dst: /usr/local/bin
 
 release:
   github:

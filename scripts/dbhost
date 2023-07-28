@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# get host:cdb:pdb from oracle session sys_context
+
+if [ $# -lt 1 ]; then
+    echo "get host:cdb:pdb from oracle session sys_context"
+    echo "Usage: $0 <Alias>"
+    exit 1
+fi
+if [ "$DEBUG" = "1" ]; then
+    DEBUG="--debug"
+else
+    DEBUG="--info=false"
+fi
+tnscli service check --dbhost "$1" $DEBUG
