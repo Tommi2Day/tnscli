@@ -323,6 +323,9 @@ XE2.LOCAL=
 
 
 ```
+## Virus Warnings
+
+some engines are reporting a virus in the binaries. This is a false positive. You may check the binaries with meta engines such as [virustotal.com](https://www.virustotal.com/gui/home/upload) or build your own binary from source. I have no glue why this happens.
 
 
 
