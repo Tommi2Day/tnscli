@@ -102,6 +102,8 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	haveConfig, err := processConfig()
+	// check flags
+	processFlags()
 
 	// logger settings
 	log.SetLevel(log.ErrorLevel)
@@ -146,19 +148,21 @@ func processConfig() (bool, error) {
 		cfgFile = viper.ConfigFileUsed()
 		haveConfig = true
 		viper.Set("config", cfgFile)
-
-		if RootCmd.Flags().Lookup("debug").Changed {
-			viper.Set("debug", debugFlag)
-		}
-		if RootCmd.Flags().Lookup("info").Changed {
-			viper.Set("info", infoFlag)
-		}
-		if RootCmd.Flags().Lookup("no-color").Changed {
-			viper.Set("no-color", noLogColorFlag)
-		}
-		if RootCmd.Flags().Lookup("tns_admin").Changed {
-			viper.Set("tns_admin", tnsAdmin)
-		}
 	}
 	return haveConfig, err
+}
+
+// processFlags set config from flags
+func processFlags() {
+	if RootCmd.Flags().Lookup("debug").Changed {
+		viper.Set("debug", debugFlag)
+	}
+	if RootCmd.Flags().Lookup("info").Changed {
+		viper.Set("info", infoFlag)
+	}
+	if RootCmd.Flags().Lookup("no-color").Changed {
+		viper.Set("no-color", noLogColorFlag)
+	}
+	debugFlag = viper.GetBool("debug")
+	infoFlag = viper.GetBool("info")
 }
