@@ -102,6 +102,7 @@ func TestRACInfo(t *testing.T) {
 			"--info",
 			"--nameserver", fmt.Sprintf("%s:%d", dnsserver, dnsport),
 			"--dnstcp",
+			"--nodns=false",
 		}
 		out, err = cmdTest(args)
 		t.Logf(out)
