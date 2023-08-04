@@ -1,6 +1,8 @@
 # Changelog tnscli
 
 # \[v3.7.8\] - 2023-08-04
+### New
+- add version test
 ### Changed
 - move tests to there packages
 
