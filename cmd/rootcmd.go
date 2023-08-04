@@ -59,7 +59,6 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&filename, "filename", "f", "", "path to alternate tnsnames.ora")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
 	RootCmd.PersistentFlags().BoolVarP(&noLogColorFlag, "no-color", "", false, "disable colored log output")
-	RootCmd.MarkFlagsMutuallyExclusive("debug", "info")
 
 	if err := viper.BindPFlags(RootCmd.PersistentFlags()); err != nil {
 		log.Fatal(err)

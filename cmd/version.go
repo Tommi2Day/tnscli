@@ -3,7 +3,8 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
@@ -14,8 +15,8 @@ var (
 		Short: "version print version string",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
-			_ = GetVersion(true)
-			os.Exit(0)
+			v := GetVersion(true)
+			log.Debugf("Version: %s", v)
 		},
 	}
 )
@@ -23,8 +24,8 @@ var (
 // Version, Build Commit and Date are filled in during build by the Makefile
 // noinspection GoUnusedGlobalVariable
 var (
-	Name    = "tnscli"
-	Version = "test"
+	Name    = configName
+	Version = "not set"
 	Commit  = "snapshot"
 	Date    = "undefined"
 )
