@@ -4,6 +4,7 @@ Small Oracle TNS Service and Connect Test Tool
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/tommi2day/tnscli)](https://goreportcard.com/report/github.com/tommi2day/tnscli)
 ![CI](https://github.com/tommi2day/tnscli/actions/workflows/main.yml/badge.svg)
+[![codecov](https://codecov.io/gh/Tommi2Day/tnscli/branch/main/graph/badge.svg?token=C1IP9AMBUM)](https://codecov.io/gh/Tommi2Day/tnscli)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tommi2day/tnscli)
 
 
