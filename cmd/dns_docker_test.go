@@ -1,4 +1,4 @@
-package test
+package cmd
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"time"
+
+	"github.com/tommi2day/tnscli/test"
 
 	"github.com/tommi2day/gomodules/common"
 	"github.com/tommi2day/gomodules/dblib"
@@ -80,7 +82,7 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 	container, err = pool.BuildAndRunWithBuildOptions(
 		&dockertest.BuildOptions{
 			BuildArgs:  buildArgs,
-			ContextDir: TestDir + "/dns",
+			ContextDir: test.TestDir + "/dns",
 			Dockerfile: "Dockerfile",
 		},
 		&dockertest.RunOptions{

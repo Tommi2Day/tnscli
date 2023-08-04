@@ -1,9 +1,11 @@
-package test
+package cmd
 
 import (
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/tommi2day/tnscli/test"
 
 	"github.com/tommi2day/gomodules/common"
 
@@ -53,8 +55,8 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 			"LDAP_SEED_INTERNAL_SCHEMA_PATH=/bootstrap/schema",
 		},
 		Mounts: []string{
-			TestDir + "/oracle-ldap/ldif:/bootstrap/ldif:ro",
-			TestDir + "/oracle-ldap/schema:/bootstrap/schema:ro",
+			test.TestDir + "/oracle-ldap/ldif:/bootstrap/ldif:ro",
+			test.TestDir + "/oracle-ldap/schema:/bootstrap/schema:ro",
 		},
 		Hostname: ldapcontainerName,
 		Name:     ldapcontainerName,

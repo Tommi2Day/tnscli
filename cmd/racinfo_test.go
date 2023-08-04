@@ -1,10 +1,12 @@
-package test
+package cmd
 
 import (
 	"fmt"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/tommi2day/tnscli/test"
 
 	"github.com/tommi2day/gomodules/dblib"
 
@@ -29,8 +31,8 @@ func TestRACInfo(t *testing.T) {
 	var err error
 	// t.Skip()
 
-	Testinit(t)
-	err = os.Chdir(TestDir)
+	test.Testinit(t)
+	err = os.Chdir(test.TestDir)
 	require.NoErrorf(t, err, "ChDir failed")
 
 	//nolint gosec

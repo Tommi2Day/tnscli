@@ -3,15 +3,10 @@ package test
 
 // https://intellij-support.jetbrains.com/hc/en-us/community/posts/360009685279-Go-test-working-directory-keeps-changing-to-dir-of-the-test-file-instead-of-value-in-template
 import (
-	"bytes"
 	"os"
 	"path"
 	"runtime"
 	"testing"
-
-	tnscmd "github.com/tommi2day/tnscli/cmd"
-
-	"github.com/sirupsen/logrus"
 )
 
 // TestDir working dir for tests
@@ -54,16 +49,4 @@ func Testinit(t *testing.T) {
 	} else {
 		t.Fatalf("Init error:%s", err)
 	}
-}
-
-func cmdTest(args []string) (out string, err error) {
-	cmd := tnscmd.RootCmd
-	b := bytes.NewBufferString("")
-	logrus.SetOutput(b)
-	cmd.SetOut(b)
-	cmd.SetErr(b)
-	cmd.SetArgs(args)
-	err = cmd.Execute()
-	out = b.String()
-	return
 }

@@ -2,6 +2,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -165,4 +166,16 @@ func processFlags() {
 	}
 	debugFlag = viper.GetBool("debug")
 	infoFlag = viper.GetBool("info")
+}
+
+func cmdTest(args []string) (out string, err error) {
+	cmd := RootCmd
+	b := bytes.NewBufferString("")
+	log.SetOutput(b)
+	cmd.SetOut(b)
+	cmd.SetErr(b)
+	cmd.SetArgs(args)
+	err = cmd.Execute()
+	out = b.String()
+	return
 }

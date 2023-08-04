@@ -1,4 +1,4 @@
-package test
+package cmd
 
 import (
 	"database/sql"
@@ -115,7 +115,7 @@ func TestOracleConnect(t *testing.T) {
 			"check",
 			"--filename", filename,
 			"--service", alias,
-			"--dbhost",
+			"--dbhostFlag",
 			"--user", DBUSER,
 			"--password", DBPASSWORD,
 			"--timeout", fmt.Sprintf("%d", TIMEOUT),

@@ -1,5 +1,9 @@
 # Changelog tnscli
 
+# \[v3.7.8\] - 2023-08-04
+### Changed
+- move tests to there packages
+
 ## \[v3.7.7\] - 2023-08-01
 ### New
 - add no-color switch to explicit disable colored output

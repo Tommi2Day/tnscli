@@ -1,34 +1,38 @@
-package test
+package cmd
 
 import (
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/tommi2day/tnscli/test"
+
 	"github.com/go-ldap/ldap/v3"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tommi2day/gomodules/common"
 	"github.com/tommi2day/gomodules/dblib"
 	"github.com/tommi2day/gomodules/ldaplib"
-	"github.com/tommi2day/tnscli/cmd"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
+/*
 const (
+
 	sOK   = "ok"
 	sNew  = "new"
 	sMod  = "mod"
 	sDel  = "del"
 	sSkip = "skip"
+
 )
+const ldapTimeout = 20
+*/
 const ldapOrganisation = "TNS Ltd"
 const LdapDomain = "oracle.local"
 const LdapBaseDn = "dc=oracle,dc=local"
 const LdapAdminUser = "cn=admin," + LdapBaseDn
 const LdapAdminPassword = "admin"
 const LdapConfigPassword = "config"
-const ldapTimeout = 20
 
 const ldaptns = ` 
 XE.local =(DESCRIPTION =
@@ -73,10 +77,10 @@ func TestOracleLdap(t *testing.T) {
 	var sslport int
 	var out = ""
 
-	Testinit(t)
-	err = os.Chdir(TestDir)
+	test.Testinit(t)
+	err = os.Chdir(test.TestDir)
 	require.NoErrorf(t, err, "ChDir failed")
-	ldapAdmin := TestData
+	ldapAdmin := test.TestData
 	//nolint gosec
 	err = os.WriteFile(ldapAdmin+"/ldap.ora", []byte(ldapOra), 0644)
 	require.NoErrorf(t, err, "Create test ldap.ora failed")
@@ -91,7 +95,7 @@ func TestOracleLdap(t *testing.T) {
 	defer common.DestroyDockerContainer(ldapContainer)
 	server, sslport = common.GetContainerHostAndPort(ldapContainer, "636/tcp")
 	// create test file to load
-	tnsAdmin := TestData
+	tnsAdmin := test.TestData
 	filename1 := tnsAdmin + "/ldap_file_write1.ora"
 	//nolint gosec
 	err = os.WriteFile(filename1, []byte(ldaptns), 0644)
@@ -129,7 +133,7 @@ func TestOracleLdap(t *testing.T) {
 		t.Logf("Oracle Context: %s", context)
 	})
 	t.Run("Write Ldap function", func(t *testing.T) {
-		err = os.Chdir(TestDir)
+		err = os.Chdir(test.TestDir)
 		require.NoErrorf(t, err, "ChDir failed")
 		t.Logf("load from %s", filename1)
 
@@ -142,8 +146,8 @@ func TestOracleLdap(t *testing.T) {
 		}
 
 		// write entries to ldap
-		var workstatus cmd.TWorkStatus
-		workstatus, err = cmd.WriteLdapTns(lc, fileTnsEntries, domain, context)
+		var workstatus TWorkStatus
+		workstatus, err = WriteLdapTns(lc, fileTnsEntries, domain, context)
 		require.NoErrorf(t, err, "Write TNS to Ldap failed: %s", err)
 		expected := len(fileTnsEntries)
 		actual := workstatus[sNew]
@@ -157,7 +161,7 @@ func TestOracleLdap(t *testing.T) {
 	}
 
 	t.Run("Modify Ldap function", func(t *testing.T) {
-		err = os.Chdir(TestDir)
+		err = os.Chdir(test.TestDir)
 		require.NoErrorf(t, err, "ChDir failed")
 
 		t.Logf("load from %s", filename2)
@@ -170,8 +174,8 @@ func TestOracleLdap(t *testing.T) {
 		}
 		require.Equal(t, 3, len(fileTnsEntries), "update TNS should have 3 entries")
 		// write entries to ldap
-		var workstatus cmd.TWorkStatus
-		workstatus, err = cmd.WriteLdapTns(lc, fileTnsEntries, domain, context)
+		var workstatus TWorkStatus
+		workstatus, err = WriteLdapTns(lc, fileTnsEntries, domain, context)
 		require.NoErrorf(t, err, "Write TNS to Ldap failed: %s", err)
 		o := workstatus[sOK]
 		n := workstatus[sNew]
@@ -185,11 +189,11 @@ func TestOracleLdap(t *testing.T) {
 		assert.Equal(t, 0, s, "No skip expected")
 	})
 	t.Run("Clear Ldap function", func(t *testing.T) {
-		_, f := cmd.ClearLdapTns(lc, context)
+		_, f := ClearLdapTns(lc, context)
 		require.Equalf(t, 0, f, "Clearing TNS Ldap had %d failures", f)
 	})
 	t.Run("Write TNS to Ldap", func(t *testing.T) {
-		tnsAdmin := TestData
+		tnsAdmin := test.TestData
 		filename := tnsAdmin + "/ldap_file_write1.ora"
 		args := []string{
 			"ldap",
@@ -212,7 +216,7 @@ func TestOracleLdap(t *testing.T) {
 	})
 
 	t.Run("Read TNS from Ldap with config file and env", func(t *testing.T) {
-		tnsAdmin := TestData
+		tnsAdmin := test.TestData
 		filename := tnsAdmin + "/ldap_file_read.ora"
 		_ = os.Remove(filename)
 		_ = os.Setenv("TNSCLI_LDAP_BINDPASSWORD", LdapAdminPassword)
@@ -222,7 +226,7 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", sslport),
 			"--ldap.tnstarget", filename,
-			"--config", TestDir + "/tnscli.yaml",
+			"--config", test.TestDir + "/tnscli.yaml",
 			"--info",
 		}
 		out, err = cmdTest(args)
@@ -239,7 +243,7 @@ func TestOracleLdap(t *testing.T) {
 			"clear",
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", sslport),
-			"--config", TestDir + "/tnscli.yaml",
+			"--config", test.TestDir + "/tnscli.yaml",
 			"--info",
 		}
 		out, err = cmdTest(args)

@@ -77,7 +77,7 @@ var dbUser = ""
 var dbPass = ""
 var tnsKey = ""
 var timeout = 15
-var dbhost = false
+var dbhostFlag = false
 var a = false
 var racinfo = ""
 var nodns = false
@@ -95,7 +95,7 @@ func init() {
 	checkCmd.PersistentFlags().StringVarP(&dbPass, "password", "p", dbPass, "Password for real connect or set TNSCLI_PASSWORD")
 	checkCmd.PersistentFlags().BoolVarP(&a, "all", "a", false, "check all entries")
 	checkCmd.PersistentFlags().IntVarP(&timeout, "timeout", "t", timeout, "timeout in sec")
-	checkCmd.Flags().BoolVarP(&dbhost, "dbhost", "H", false, "print actual connected host:cdb:pdb")
+	checkCmd.Flags().BoolVarP(&dbhostFlag, "dbhostFlag", "H", false, "print actual connected host:cdb:pdb")
 
 	portInfoCmd.Flags().StringVarP(&racinfo, "racinfo", "r", "", "path to racinfo.ini to resolve all RAC TCP Adresses, default $TNS_ADMIN/racinfo.ini")
 	portInfoCmd.Flags().StringVarP(&nameserver, "nameserver", "n", "", "alternative nameserver to use for DNS lookup (IP:PORT)")
@@ -318,7 +318,7 @@ func allCheck(tnsEntries dblib.TNSEntries) (err error) {
 		ok, elapsed, hostval, errmsg := CheckWithOracle(dbUser, dbPass, desc, timeout)
 		if ok {
 			o++
-			if dbhost {
+			if dbhostFlag {
 				fmt.Printf(" OK-> %s, %s\n", hostval, elapsed.Round(time.Millisecond))
 			} else {
 				fmt.Printf(" OK-> %s\n", elapsed.Round(time.Millisecond))
@@ -368,7 +368,7 @@ func singleCheck(args []string, tnsEntries dblib.TNSEntries, domain string) (err
 		}
 		hv := ""
 		if ok {
-			if dbhost && hostval == "" {
+			if dbhostFlag && hostval == "" {
 				err = fmt.Errorf("database is available, but couldnt extract host info from database for alias %s, maybe login failed", tnsKey)
 				return
 			}
@@ -376,7 +376,7 @@ func singleCheck(args []string, tnsEntries dblib.TNSEntries, domain string) (err
 				hv = "(" + hostval + ") "
 			}
 			log.Infof("service %s connected %s%s in %s\n", tnsKey, hv, con, elapsed.Round(time.Millisecond))
-			if dbhost {
+			if dbhostFlag {
 				fmt.Printf("%s -> %s\n", tnsKey, hostval)
 			} else {
 				fmt.Printf("OK, service %s reachable\n", tnsAlias)
@@ -422,9 +422,9 @@ func CheckWithOracle(dbuser string, dbpass string, tnsDesc string, timeout int) 
 	} else {
 		log.Debugf("Connection OK, test if db is open using select")
 		sql := "select 'DB is open, sysdate:'||to_char(sysdate,'YYYY-MM-DD HH24:MI:SS') from dual"
-		if dbhost {
+		if dbhostFlag {
 			// extract host,cdb and pdb from database
-			sql = "select sys_context('USERENV','SERVER_HOST')||':'||sys_context('USERENV','INSTANCE_NAME')||':'||nvl(sys_context('USERENV','CON_NAME'),'') as dbhost from dual"
+			sql = "select sys_context('USERENV','SERVER_HOST')||':'||sys_context('USERENV','INSTANCE_NAME')||':'||nvl(sys_context('USERENV','CON_NAME'),'') as dbhostFlag from dual"
 		}
 		hostval, err = dblib.SelectOneStringValue(db, sql)
 		log.Infof("Query returned:  %s", hostval)

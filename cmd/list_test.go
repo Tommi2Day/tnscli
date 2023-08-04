@@ -1,9 +1,11 @@
-package test
+package cmd
 
 import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/tommi2day/tnscli/test"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -84,9 +86,9 @@ var tnsAdminDir = "testdata"
 
 func TestParseTns(t *testing.T) {
 	var err error
-	Testinit(t)
+	test.Testinit(t)
 	//nolint gosec
-	err = os.Chdir(TestDir)
+	err = os.Chdir(test.TestDir)
 	require.NoErrorf(t, err, "ChDir failed")
 
 	//nolint gosec
@@ -123,7 +125,7 @@ func TestParseTns(t *testing.T) {
 			success bool
 			service string
 		}
-		for _, test := range []testTableType{
+		for _, testRun := range []testTableType{
 			{
 				name:    "XE-full",
 				alias:   "XE.local",
@@ -167,15 +169,15 @@ func TestParseTns(t *testing.T) {
 				service: "",
 			},
 		} {
-			t.Run(test.name, func(t *testing.T) {
-				e, ok := dblib.GetEntry(test.alias, tnsEntries, domain)
-				if test.success {
-					assert.True(t, ok, "Alias %s not found", test.alias)
+			t.Run(testRun.name, func(t *testing.T) {
+				e, ok := dblib.GetEntry(testRun.alias, tnsEntries, domain)
+				if testRun.success {
+					assert.True(t, ok, "Alias %s not found", testRun.alias)
 					name := strings.ToUpper(e.Name)
-					assert.True(t, strings.HasPrefix(name, strings.ToUpper(test.alias)), "entry not related to given alias %s", test.alias)
-					assert.Equalf(t, test.service, e.Service, "entry returned wrong service ('%s' <>'%s)", e.Service, test.service)
+					assert.True(t, strings.HasPrefix(name, strings.ToUpper(testRun.alias)), "entry not related to given alias %s", testRun.alias)
+					assert.Equalf(t, testRun.service, e.Service, "entry returned wrong service ('%s' <>'%s)", e.Service, testRun.service)
 				} else {
-					assert.False(t, ok, "Alias %s found, but shouldnt be", test.alias)
+					assert.False(t, ok, "Alias %s found, but shouldnt be", testRun.alias)
 				}
 			})
 		}
