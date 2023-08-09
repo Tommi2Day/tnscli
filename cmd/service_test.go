@@ -69,8 +69,9 @@ func TestOracleConnect(t *testing.T) {
 			"--filename", filename,
 			"--service", alias,
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("service %s connected", alias)
@@ -88,8 +89,9 @@ func TestOracleConnect(t *testing.T) {
 			"--password", DBPASSWORD,
 			"--timeout", fmt.Sprintf("%d", TIMEOUT),
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("service %s connected", alias)
@@ -102,8 +104,9 @@ func TestOracleConnect(t *testing.T) {
 			"check",
 			"--filename", filename,
 			"--service", "dummy",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.Errorf(t, err, "Check should fail")
 		assert.Contains(t, out, "Error: alias dummy not found", "Expected Message not found")
@@ -120,8 +123,9 @@ func TestOracleConnect(t *testing.T) {
 			"--password", DBPASSWORD,
 			"--timeout", fmt.Sprintf("%d", TIMEOUT),
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("service %s connected", alias)
@@ -139,8 +143,9 @@ func TestOracleConnect(t *testing.T) {
 			"--service", alias,
 			"--info",
 			"--nodns",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("Alias %s uses", alias)
@@ -156,8 +161,9 @@ func TestOracleConnect(t *testing.T) {
 			"--filename", filename,
 			"--service", alias,
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := "jdbc:Oracle"
@@ -172,8 +178,9 @@ func TestOracleConnect(t *testing.T) {
 			"--filename", filename,
 			"--service", alias,
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := strings.ToUpper(alias)
@@ -189,8 +196,9 @@ func TestOracleConnect(t *testing.T) {
 			"--service", alias,
 			"--info",
 			"--nodns",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := dbhost

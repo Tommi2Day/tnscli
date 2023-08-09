@@ -208,8 +208,9 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.bindpassword", LdapAdminPassword,
 			"--ldap.tnssource", filename,
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error: %s", err)
 		t.Logf(out)
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")
@@ -228,8 +229,9 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.tnstarget", filename,
 			"--config", test.TestDir + "/tnscli.yaml",
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error:%s", err)
 		t.Logf(out)
 		assert.FileExistsf(t, filename, "Output File not created")
@@ -245,8 +247,9 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.port", fmt.Sprintf("%d", sslport),
 			"--config", test.TestDir + "/tnscli.yaml",
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error:%s", err)
 		t.Logf(out)
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")

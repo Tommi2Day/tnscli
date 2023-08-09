@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tommi2day/gomodules/common"
+
 	"github.com/tommi2day/tnscli/test"
 
 	"github.com/stretchr/testify/assert"
@@ -218,8 +220,9 @@ func TestParseTns(t *testing.T) {
 			"--filename", filename,
 			"--search", "XE1",
 			"--info",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		assert.NoErrorf(t, err, "List command should not return an error:%s", err)
 		assert.NotEmpty(t, out, "List should not empty")
 		assert.Contains(t, out, "found 1 ", "Output should state one entry")

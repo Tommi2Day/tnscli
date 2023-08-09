@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tommi2day/gomodules/common"
+
 	"github.com/tommi2day/tnscli/test"
 
 	"github.com/tommi2day/gomodules/dblib"
@@ -86,8 +88,9 @@ func TestRACInfo(t *testing.T) {
 			"--service", "XE.local",
 			"--info",
 			"--nodns",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("Alias XE.local uses %d addresses", 1)
@@ -105,8 +108,9 @@ func TestRACInfo(t *testing.T) {
 			"--nameserver", fmt.Sprintf("%s:%d", dnsserver, dnsport),
 			"--dnstcp",
 			"--nodns=false",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("Alias %s uses %d addresses", racalias, 6)

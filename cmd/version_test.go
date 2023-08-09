@@ -3,6 +3,8 @@ package cmd
 import (
 	"testing"
 
+	"github.com/tommi2day/gomodules/common"
+
 	"github.com/tommi2day/tnscli/test"
 
 	"github.com/stretchr/testify/assert"
@@ -22,8 +24,9 @@ func TestVersion(t *testing.T) {
 		args := []string{
 			"version",
 			"--debug",
+			"--unit-test",
 		}
-		out, err = cmdTest(args)
+		out, err = common.CmdRun(RootCmd, args)
 		assert.NoErrorf(t, err, "version command should not return an error:%s", err)
 		assert.NotEmpty(t, out, "version command should not return an empty string")
 		assert.Containsf(t, out, configName, "version command should contain %s", configName)
