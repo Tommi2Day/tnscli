@@ -2,7 +2,6 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -48,6 +47,7 @@ var (
 	infoFlag       = false
 	cfgFile        = ""
 	noLogColorFlag = false
+	unitTestFlag   = false
 )
 
 func init() {
@@ -55,6 +55,7 @@ func init() {
 	// parse commandline
 	RootCmd.PersistentFlags().BoolVarP(&debugFlag, "debug", "", false, "verbose debug output")
 	RootCmd.PersistentFlags().BoolVarP(&infoFlag, "info", "", false, "reduced info output")
+	RootCmd.PersistentFlags().BoolVarP(&unitTestFlag, "unit-test", "", false, "redirect output for unit tests")
 	RootCmd.PersistentFlags().StringVarP(&tnsAdmin, "tns_admin", "A", tnsAdmin, "TNS_ADMIN directory")
 	RootCmd.PersistentFlags().StringVarP(&filename, "filename", "f", "", "path to alternate tnsnames.ora")
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file")
@@ -121,6 +122,9 @@ func initConfig() {
 		TimestampFormat: time.RFC1123,
 	}
 	log.SetFormatter(logFormatter)
+	if unitTestFlag {
+		log.SetOutput(RootCmd.OutOrStdout())
+	}
 
 	// debug config file
 	if haveConfig {
@@ -154,27 +158,15 @@ func processConfig() (bool, error) {
 
 // processFlags set config from flags
 func processFlags() {
-	if RootCmd.Flags().Lookup("debug").Changed {
+	if common.CmdFlagChanged(RootCmd, "debug") {
 		viper.Set("debug", debugFlag)
 	}
-	if RootCmd.Flags().Lookup("info").Changed {
+	if common.CmdFlagChanged(RootCmd, "info") {
 		viper.Set("info", infoFlag)
 	}
-	if RootCmd.Flags().Lookup("no-color").Changed {
+	if common.CmdFlagChanged(RootCmd, "no-color") {
 		viper.Set("no-color", noLogColorFlag)
 	}
 	debugFlag = viper.GetBool("debug")
 	infoFlag = viper.GetBool("info")
-}
-
-func cmdTest(args []string) (out string, err error) {
-	cmd := RootCmd
-	b := bytes.NewBufferString("")
-	log.SetOutput(b)
-	cmd.SetOut(b)
-	cmd.SetErr(b)
-	cmd.SetArgs(args)
-	err = cmd.Execute()
-	out = b.String()
-	return
 }

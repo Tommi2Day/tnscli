@@ -96,6 +96,7 @@ Flags:
       --info               reduced info output
       --no-color           disable colored log output
   -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
+      --unit-test          redirect output for unit tests
 
 Use "tnscli [command] --help" for more information about a command.
 

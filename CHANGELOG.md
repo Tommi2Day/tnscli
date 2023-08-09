@@ -1,5 +1,13 @@
 # Changelog tnscli
 
+## [v3.7.9 - 2023-08-09]
+### New
+- add new flag --unit-tests to redirect output for unit tests
+### Changed
+- use gomodules v1.9.3
+- use common.CmdRun instead of cmdTest
+- use common.CmdFlagChanged instead of cmd.Flags().Lookup().Changed
+
 # \[v3.7.8\] - 2023-08-04
 ### New
 - add version test
