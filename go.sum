@@ -2673,8 +2673,6 @@ github.com/tomarrell/wrapcheck/v2 v2.8.1 h1:HxSqDSN0sAt0yJYsrcYVoEeyM4aI9yAm3KQp
 github.com/tomarrell/wrapcheck/v2 v2.8.1/go.mod h1:/n2Q3NZ4XFT50ho6Hbxg+RV1uyo2Uow/Vdm9NQcl5SE=
 github.com/tommi2day/gomodules v1.9.3 h1:ht3QBuMIWOHdYdWsmFcJTFxKDC5DclgZfq3kvyTA8ck=
 github.com/tommi2day/gomodules v1.9.3/go.mod h1:oEmXw2BTnhkZdbzDVjD3GSlehipKAJa16pvSK6v5Qbo=
-github.com/tommi2day/pwcli v0.0.0-20230809135518-3a52af33a625 h1:FONsPDVsPTBo6LxWtuYOJknX7b+tXq/GM0G/YUSQZbI=
-github.com/tommi2day/pwcli v0.0.0-20230809135518-3a52af33a625/go.mod h1:8T6H1TmUW2KgFQayE2fHyZRYSaqIMT8k+WHGDHDNCgg=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1 h1:NowYhSdyE/1zwK9QCLeRb6USWdoif80Ie+v+yU8u1Zw=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1/go.mod h1:WsUAkMJMYww6l/ufffCD3m+P7LEvr8TnZn9lwVDlgzw=
 github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 h1:nrZ3ySNYwJbSpD6ce9duiP+QkD3JuLCcWkdaehUS/3Y=

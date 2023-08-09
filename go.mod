@@ -17,7 +17,6 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tommi2day/gomodules v1.9.3
-	github.com/tommi2day/pwcli v0.0.0-20230809135518-3a52af33a625
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 
 )
