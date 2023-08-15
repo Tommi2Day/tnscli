@@ -1,5 +1,11 @@
 # Changelog tnscli
 
+## [v3.7.10 - 2023-08-15]
+### Changed
+- use gomodules v1.9.4
+### Fixed
+- dhost flag naming
+
 ## [v3.7.9 - 2023-08-09]
 ### New
 - add new flag --unit-tests to redirect output for unit tests

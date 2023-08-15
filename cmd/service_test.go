@@ -118,7 +118,7 @@ func TestOracleConnect(t *testing.T) {
 			"check",
 			"--filename", filename,
 			"--service", alias,
-			"--dbhostFlag",
+			"--dbhost",
 			"--user", DBUSER,
 			"--password", DBPASSWORD,
 			"--timeout", fmt.Sprintf("%d", TIMEOUT),

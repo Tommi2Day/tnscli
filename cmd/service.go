@@ -95,7 +95,7 @@ func init() {
 	checkCmd.PersistentFlags().StringVarP(&dbPass, "password", "p", dbPass, "Password for real connect or set TNSCLI_PASSWORD")
 	checkCmd.PersistentFlags().BoolVarP(&a, "all", "a", false, "check all entries")
 	checkCmd.PersistentFlags().IntVarP(&timeout, "timeout", "t", timeout, "timeout in sec")
-	checkCmd.Flags().BoolVarP(&dbhostFlag, "dbhostFlag", "H", false, "print actual connected host:cdb:pdb")
+	checkCmd.Flags().BoolVarP(&dbhostFlag, "dbhost", "H", false, "print actual connected host:cdb:pdb")
 
 	portInfoCmd.Flags().StringVarP(&racinfo, "racinfo", "r", "", "path to racinfo.ini to resolve all RAC TCP Adresses, default $TNS_ADMIN/racinfo.ini")
 	portInfoCmd.Flags().StringVarP(&nameserver, "nameserver", "n", "", "alternative nameserver to use for DNS lookup (IP:PORT)")
