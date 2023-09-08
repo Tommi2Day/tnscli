@@ -71,7 +71,7 @@ var (
 )
 
 const defaultUser = "C##TCHECK"
-const defaultPassword = "<MyCheckPassword>"
+const defaultPassword = "C0nnectMe!now"
 
 var dbUser = ""
 var dbPass = ""
@@ -260,7 +260,7 @@ func getJdbcInfo(_ *cobra.Command, args []string) (err error) {
 		desc := entry.Desc
 		repl := strings.NewReplacer("\r", "", "\n", "", "\t", "", " ", "")
 		desc = repl.Replace(desc)
-		out := fmt.Sprintf("jdbc:Oracle:thin@%s", desc)
+		out := fmt.Sprintf("jdbc:Oracle:thin:@%s", desc)
 		log.Infof(out)
 		fmt.Println(out)
 	}

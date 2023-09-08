@@ -1,5 +1,9 @@
 # Changelog tnscli
 
+## [v3.7.11 - 2023-09-08]
+### Fixed
+- jdbc connect string format error
+
 ## [v3.7.10 - 2023-08-15]
 ### Changed
 - use gomodules v1.9.4

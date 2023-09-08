@@ -234,7 +234,7 @@ XE.LOCAL=  (DESCRIPTION =
 
 #give jdbc string for a service
 >tnscli service info jdbc xe -A test/testdata/
-jdbc:Oracle:thin@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XE)))
+jdbc:Oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XE)))
 
 #give target host and port for a service
 >tnscli service info server xe -A test/testdata/

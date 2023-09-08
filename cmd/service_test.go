@@ -166,7 +166,7 @@ func TestOracleConnect(t *testing.T) {
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := "jdbc:Oracle"
+		expect := "jdbc:Oracle:thin:@("
 		assert.Contains(t, out, expect, "Expected Message not found")
 	})
 	t.Run("CMD TNS info", func(t *testing.T) {
