@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -60,7 +61,7 @@ func TestRACInfo(t *testing.T) {
 	t.Run("Test RacInfo.ini resolution", func(t *testing.T) {
 		dblib.IgnoreDNSLookup = false
 		dblib.IPv4Only = true
-		addr := dblib.GetRacAdresses(racaddr, tnsAdminDir+"/racinfo.ini")
+		addr := dblib.GetRacAdresses(racaddr, path.Join(tnsAdminDir, racinfoFile))
 		assert.Equal(t, 6, len(addr), "Count not expected")
 		t.Logf("Addresses: %v", addr)
 	})

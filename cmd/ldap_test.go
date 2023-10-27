@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/tommi2day/tnscli/test"
@@ -71,16 +72,23 @@ DIRECTORY_SERVERS = (localhost:1389:1636, ldap:389)
 DIRECTORY_SERVER_TYPE = OID
 `
 
+var tnsSource1 = path.Join(tnsAdmin, "/ldap_file_write1.ora")
+var tnsSource2 = path.Join(tnsAdmin, "/ldap_file_write2.ora")
+
 func TestOracleLdap(t *testing.T) {
 	var err error
 	var server string
 	var sslport int
 	var out = ""
+	var domain string
+	var fileTnsEntries dblib.TNSEntries
 
 	test.Testinit(t)
 	err = os.Chdir(test.TestDir)
 	require.NoErrorf(t, err, "ChDir failed")
 	ldapAdmin := test.TestData
+	tnsAdmin = test.TestData
+	testConfig := path.Join(test.TestDir, "tnscli.yaml")
 	//nolint gosec
 	err = os.WriteFile(ldapAdmin+"/ldap.ora", []byte(ldapOra), 0644)
 	require.NoErrorf(t, err, "Create test ldap.ora failed")
@@ -95,15 +103,14 @@ func TestOracleLdap(t *testing.T) {
 	defer common.DestroyDockerContainer(ldapContainer)
 	server, sslport = common.GetContainerHostAndPort(ldapContainer, "636/tcp")
 	// create test file to load
-	tnsAdmin := test.TestData
-	filename1 := tnsAdmin + "/ldap_file_write1.ora"
+
 	//nolint gosec
-	err = os.WriteFile(filename1, []byte(ldaptns), 0644)
-	require.NoErrorf(t, err, "Create test %s failed", filename1)
-	filename2 := tnsAdmin + "/ldap_file_write2.ora"
+	err = os.WriteFile(tnsSource1, []byte(ldaptns), 0644)
+	require.NoErrorf(t, err, "Create test %s failed", tnsSource1)
+
 	//nolint gosec
-	err = os.WriteFile(filename2, []byte(ldaptns2), 0644)
-	require.NoErrorf(t, err, "Create test %s failed", filename2)
+	err = os.WriteFile(tnsSource2, []byte(ldaptns2), 0644)
+	require.NoErrorf(t, err, "Create test %s failed", tnsSource2)
 
 	base := LdapBaseDn
 	lc := ldaplib.NewConfig(server, sslport, true, true, base, ldapTimeout)
@@ -135,11 +142,11 @@ func TestOracleLdap(t *testing.T) {
 	t.Run("Write Ldap function", func(t *testing.T) {
 		err = os.Chdir(test.TestDir)
 		require.NoErrorf(t, err, "ChDir failed")
-		t.Logf("load from %s", filename1)
+		t.Logf("load from %s", tnsSource1)
 
 		// read entries from file
-		fileTnsEntries, domain, err := dblib.GetTnsnames(filename1, true)
-		require.NoErrorf(t, err, "Parsing %s failed: %s", filename1, err)
+		fileTnsEntries, domain, err := dblib.GetTnsnames(tnsSource1, true)
+		require.NoErrorf(t, err, "Parsing %s failed: %s", tnsSource1, err)
 		if err != nil {
 			t.Fatalf("tns load returned error: %s ", err)
 			return
@@ -164,10 +171,10 @@ func TestOracleLdap(t *testing.T) {
 		err = os.Chdir(test.TestDir)
 		require.NoErrorf(t, err, "ChDir failed")
 
-		t.Logf("load from %s", filename2)
+		t.Logf("load from %s", tnsSource2)
 		// read entries from file
-		fileTnsEntries, domain, err := dblib.GetTnsnames(filename2, true)
-		require.NoErrorf(t, err, "Parsing %s failed: %s", filename2, err)
+		fileTnsEntries, domain, err = dblib.GetTnsnames(tnsSource2, true)
+		require.NoErrorf(t, err, "Parsing %s failed: %s", tnsSource2, err)
 		if err != nil {
 			t.Fatalf("tns load returned error: %s ", err)
 			return
@@ -193,8 +200,6 @@ func TestOracleLdap(t *testing.T) {
 		require.Equalf(t, 0, f, "Clearing TNS Ldap had %d failures", f)
 	})
 	t.Run("Write TNS to Ldap", func(t *testing.T) {
-		tnsAdmin := test.TestData
-		filename := tnsAdmin + "/ldap_file_write1.ora"
 		args := []string{
 			"ldap",
 			"write",
@@ -206,7 +211,7 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.base", LdapBaseDn,
 			"--ldap.binddn", LdapAdminUser,
 			"--ldap.bindpassword", LdapAdminPassword,
-			"--ldap.tnssource", filename,
+			"--ldap.tnssource", tnsSource1,
 			"--info",
 			"--unit-test",
 		}
@@ -217,8 +222,8 @@ func TestOracleLdap(t *testing.T) {
 	})
 
 	t.Run("Read TNS from Ldap with config file and env", func(t *testing.T) {
-		tnsAdmin := test.TestData
-		filename := tnsAdmin + "/ldap_file_read.ora"
+		tnsAdmin = test.TestData
+		filename = tnsAdmin + "/ldap_file_read.ora"
 		_ = os.Remove(filename)
 		_ = os.Setenv("TNSCLI_LDAP_BINDPASSWORD", LdapAdminPassword)
 		args := []string{
@@ -227,7 +232,7 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", sslport),
 			"--ldap.tnstarget", filename,
-			"--config", test.TestDir + "/tnscli.yaml",
+			"--config", testConfig,
 			"--info",
 			"--unit-test",
 		}
@@ -245,7 +250,7 @@ func TestOracleLdap(t *testing.T) {
 			"clear",
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", sslport),
-			"--config", test.TestDir + "/tnscli.yaml",
+			"--config", testConfig,
 			"--info",
 			"--unit-test",
 		}

@@ -4,6 +4,7 @@ package cmd
 import (
 	"fmt"
 	"net"
+	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -72,6 +73,7 @@ var (
 
 const defaultUser = "C##TCHECK"
 const defaultPassword = "C0nnectMe!now"
+const racinfoFile = "racinfo.ini"
 
 var dbUser = ""
 var dbPass = ""
@@ -154,7 +156,7 @@ func portInfo(_ *cobra.Command, args []string) (err error) {
 		return
 	}
 	if racinfo == "" {
-		racinfo = viper.GetString("tns_admin") + "/racinfo.ini"
+		racinfo = path.Join(viper.GetString("tns_admin"), racinfoFile)
 	}
 	entry, err := getEntry(tnsKey)
 	if err == nil {

@@ -1,5 +1,13 @@
 # Changelog tnscli
 
+## [v3.8.0 - 2023-10-27]
+### Changed
+- use go 1.21
+- update workflow
+- use gomodules v1.10.0
+- update testinit
+- fix linter issues
+
 ## [v3.7.11 - 2023-09-08]
 ### Fixed
 - jdbc connect string format error

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path"
 	"strings"
 	"testing"
 
@@ -86,6 +87,9 @@ const entryCount = 7
 
 var tnsAdminDir = "testdata"
 
+const tnsFile = "tnsnames.ora"
+const sqlnetFile = "sqlnet.ora"
+
 func TestParseTns(t *testing.T) {
 	var err error
 	test.Testinit(t)
@@ -94,16 +98,16 @@ func TestParseTns(t *testing.T) {
 	require.NoErrorf(t, err, "ChDir failed")
 
 	//nolint gosec
-	err = os.WriteFile(tnsAdminDir+"/sqlnet.ora", []byte(sqlnetora), 0644)
+	err = os.WriteFile(path.Join(tnsAdminDir, sqlnetFile), []byte(sqlnetora), 0644)
 	require.NoErrorf(t, err, "Create test sqlnet.ora failed")
 	//nolint gosec
-	err = os.WriteFile(tnsAdminDir+"/tnsnames.ora", []byte(tnsnamesora), 0644)
+	err = os.WriteFile(path.Join(tnsAdminDir, tnsFile), []byte(tnsnamesora), 0644)
 	require.NoErrorf(t, err, "Create test tnsnames.ora failed")
 	//nolint gosec
-	err = os.WriteFile(tnsAdminDir+"/ifile.ora", []byte(ifileora), 0644)
+	err = os.WriteFile(path.Join(tnsAdminDir, "ifile.ora"), []byte(ifileora), 0644)
 	require.NoErrorf(t, err, "Create test ifile.ora failed")
 
-	filename := tnsAdminDir + "/tnsnames.ora"
+	filename = path.Join(tnsAdminDir, tnsFile)
 	t.Logf("load from %s", filename)
 	tnsEntries, domain, err := dblib.GetTnsnames(filename, true)
 	t.Logf("Default Domain: '%s'", domain)
@@ -160,7 +164,7 @@ func TestParseTns(t *testing.T) {
 			},
 			{
 				name:    "XE+invalid domain",
-				alias:   "XE" + ".xx.xx",
+				alias:   "XE.xx.xx",
 				success: false,
 				service: "",
 			},
