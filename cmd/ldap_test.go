@@ -72,9 +72,6 @@ DIRECTORY_SERVERS = (localhost:1389:1636, ldap:389)
 DIRECTORY_SERVER_TYPE = OID
 `
 
-var tnsSource1 = path.Join(tnsAdmin, "/ldap_file_write1.ora")
-var tnsSource2 = path.Join(tnsAdmin, "/ldap_file_write2.ora")
-
 func TestOracleLdap(t *testing.T) {
 	var err error
 	var server string
@@ -89,6 +86,9 @@ func TestOracleLdap(t *testing.T) {
 	ldapAdmin := test.TestData
 	tnsAdmin = test.TestData
 	testConfig := path.Join(test.TestDir, "tnscli.yaml")
+	tnsSource1 := path.Join(tnsAdmin, "/ldap_file_write1.ora")
+	tnsSource2 := path.Join(tnsAdmin, "/ldap_file_write2.ora")
+
 	//nolint gosec
 	err = os.WriteFile(ldapAdmin+"/ldap.ora", []byte(ldapOra), 0644)
 	require.NoErrorf(t, err, "Create test ldap.ora failed")
