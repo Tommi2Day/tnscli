@@ -1188,8 +1188,8 @@ github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 h1:e/5i7d4oYZ+C
 github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399/go.mod h1:LdwHTNJT99C5fTAzDz0ud328OgXz+gierycbcIx2fRs=
 github.com/tomarrell/wrapcheck/v2 v2.8.1 h1:HxSqDSN0sAt0yJYsrcYVoEeyM4aI9yAm3KQpIXDJRhQ=
 github.com/tomarrell/wrapcheck/v2 v2.8.1/go.mod h1:/n2Q3NZ4XFT50ho6Hbxg+RV1uyo2Uow/Vdm9NQcl5SE=
-github.com/tommi2day/gomodules v1.10.0 h1:nJEfGggvrxkSvcUNTWrWsx53cv3XpnNT+EC5rp6UvbE=
-github.com/tommi2day/gomodules v1.10.0/go.mod h1:pQLPFBaRRZ/KkvExpZsOl5kasklnIo6Jtpd8IdhWZaQ=
+github.com/tommi2day/gomodules v1.10.1 h1:YczEL0vcjXRBEA8nAFRXQAteMM1Bw2Rj5PbKpKAhb7Q=
+github.com/tommi2day/gomodules v1.10.1/go.mod h1:pQLPFBaRRZ/KkvExpZsOl5kasklnIo6Jtpd8IdhWZaQ=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1 h1:NowYhSdyE/1zwK9QCLeRb6USWdoif80Ie+v+yU8u1Zw=
 github.com/tommy-muehle/go-mnd/v2 v2.5.1/go.mod h1:WsUAkMJMYww6l/ufffCD3m+P7LEvr8TnZn9lwVDlgzw=
 github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 h1:nrZ3ySNYwJbSpD6ce9duiP+QkD3JuLCcWkdaehUS/3Y=
