@@ -112,6 +112,20 @@ func TestOracleLdap(t *testing.T) {
 	err = os.WriteFile(tnsSource2, []byte(ldaptns2), 0644)
 	require.NoErrorf(t, err, "Create test %s failed", tnsSource2)
 
+	t.Run("Ldap Config with ldap.ora", func(t *testing.T) {
+		contextDN = ""
+		lc, _ := ldapConnect()
+		require.NotNil(t, lc, "Ldap Config is nil")
+		if lc == nil {
+			t.Fatalf("No valid Configuraction, terminate")
+			return
+		}
+		t.Logf("Ldap Config: H:%s,P:%d,B:%s,T:%v", lc.Server, lc.Port, lc.BaseDN, lc.TLS)
+		assert.Equal(t, ldapBaseDN, lc.BaseDN, "BaseDN not as expected")
+		assert.Equal(t, 389, lc.Port, "Port not as expected")
+		assert.Equal(t, "ldap", lc.Server, "Host not as expected")
+		assert.Equal(t, false, lc.TLS, "TLS flag not as expected")
+	})
 	base := LdapBaseDn
 	lc := ldaplib.NewConfig(server, sslport, true, true, base, ldapTimeout)
 	context := ""

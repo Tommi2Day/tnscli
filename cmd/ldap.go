@@ -152,13 +152,14 @@ func ldapConnect() (lc *ldaplib.LdapConfigType, err error) {
 	if contextDN != "" {
 		base = contextDN
 	}
-	contextDN, err = dblib.GetOracleContext(lc, base)
-
+	c, err := dblib.GetOracleContext(lc, base)
 	// verify
-	if contextDN == "" {
-		err = fmt.Errorf("no Oracle Context found on base %s", ldapBaseDN)
+	if c == "" {
+		err = fmt.Errorf("no Oracle Context found/verified on base %s (%s):%s", ldapBaseDN, contextDN, err)
+	} else {
+		log.Infof("Oracle Context selected: %s", contextDN)
 	}
-	log.Infof("Oracle Context selected: %s", contextDN)
+	contextDN = c
 	return
 }
 
@@ -175,19 +176,22 @@ func doConnect(servers []dblib.LdapServer) (lc *ldaplib.LdapConfigType, err erro
 	case len(servers) > 0 && ldapServer == "":
 		log.Debug("Try to use LDAP Server from ldap.ora")
 		for _, s := range servers {
-			ldapServer = s.Hostname
-			ldapPort = s.Port
+			lServer := s.Hostname
+			lPort := s.Port
 			sslport := s.SSLPort
-
+			lTLS := false
 			if sslport > 0 {
-				ldapPort = sslport
-				ldapTLS = true
+				lPort = sslport
+				lTLS = true
 			}
 			log.Debugf("Try to connect to Ldap Server %s, Port %d", ldapServer, ldapPort)
-			lc = ldaplib.NewConfig(ldapServer, ldapPort, ldapTLS, ldapInsecure, ldapBaseDN, ldapTimeout)
+			lc = ldaplib.NewConfig(lServer, lPort, lTLS, ldapInsecure, ldapBaseDN, ldapTimeout)
 			err = lc.Connect(ldapBindDN, ldapBindPassword)
 			if err == nil && lc.Conn != nil {
-				log.Debugf("Connect to Ldap Server %s, Port %d", ldapServer, ldapPort)
+				log.Debugf("Connect to Ldap Server %s, Port %d, TLS:%v", lServer, lPort, lTLS)
+				ldapServer = lServer
+				ldapPort = lPort
+				ldapTLS = lTLS
 				break
 			}
 		}
