@@ -1,10 +1,14 @@
 # Changelog tnscli
 
-## [v3.8.1 - 2023-10-30]
+## [v3.8.2 - 2023-10-31]
 ### New
 - service info jdbc: replace TRANSPORT_CONNECT_TIMEOUT in JDBC connect string if set <1000 
 to be in milliseconds as required by Oracle JDBC >12.1. 
 You may disable this with --noModifyTransportConnectTimeout
+### Changed
+- rename TCP portcheck result `UNKNOWN` to `PROBLEM` and add err message
+- enhance tcp check output
+- add ldap config test
 ### fixed
 - service info jdbc: wrong jdbc prefix spelling
 
