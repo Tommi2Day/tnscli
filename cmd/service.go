@@ -80,7 +80,7 @@ var dbPass = ""
 var tnsKey = ""
 var timeout = 15
 var dbhostFlag = false
-var a = false
+var all = false
 var racinfo = ""
 var nodns = false
 var ipv4 = false
@@ -96,7 +96,7 @@ func init() {
 
 	checkCmd.PersistentFlags().StringVarP(&dbUser, "user", "u", dbUser, "User for real connect or set TNSCLI_USER")
 	checkCmd.PersistentFlags().StringVarP(&dbPass, "password", "p", dbPass, "Password for real connect or set TNSCLI_PASSWORD")
-	checkCmd.PersistentFlags().BoolVarP(&a, "all", "a", false, "check all entries")
+	checkCmd.PersistentFlags().BoolVarP(&all, "all", "a", false, "check all entries")
 	checkCmd.PersistentFlags().IntVarP(&timeout, "timeout", "t", timeout, "timeout in sec")
 	checkCmd.Flags().BoolVarP(&dbhostFlag, "dbhost", "H", false, "print actual connected host:cdb:pdb")
 
@@ -231,8 +231,10 @@ func doTCPPing(host string, address string) {
 		return
 	}
 	// Default
-	log.Infof("%s(%s) UNKNOWN ", host, address)
-	fmt.Printf("%s (%s) UNKNOWN\n", host, address)
+	e := err.Error()
+	e = strings.ReplaceAll(e, "dial tcp:", "")
+	log.Infof("%s(%s) port status PROBLEM: %s ", host, address, e)
+	fmt.Printf("%s (%s) port status PROBLEM: %s\n", host, address, e)
 }
 
 func getTnsInfo(_ *cobra.Command, args []string) (err error) {
@@ -300,7 +302,7 @@ func checkTns(_ *cobra.Command, args []string) (err error) {
 	}
 
 	// do checks depending on mode
-	if a {
+	if all {
 		// all flag given, check every entry
 		return allCheck(tnsEntries)
 	}

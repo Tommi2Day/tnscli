@@ -81,6 +81,23 @@ func TestOracleConnect(t *testing.T) {
 		assert.Contains(t, out, expect, "Expected Message not found")
 		assert.Contains(t, out, "Connect OK, but Login error", "Expected Login Error not found")
 	})
+	t.Run("CMD all Check with dummy", func(t *testing.T) {
+		out := ""
+		args := []string{
+			"service",
+			"check",
+			"--filename", tnsFilename,
+			"--all",
+			"--info",
+			"--unit-test",
+		}
+		out, err = common.CmdRun(RootCmd, args)
+		t.Logf(out)
+		assert.Errorf(t, err, "Check should fail")
+		expect := "2 entries checked, 1 ok, 1 failed"
+		assert.Contains(t, out, expect, "Expected Message not found")
+		all = false
+	})
 	t.Run("CMD Check with real user", func(t *testing.T) {
 		out := ""
 		args := []string{
@@ -246,5 +263,21 @@ func TestOracleConnect(t *testing.T) {
 		expect := dbhost
 		assert.Contains(t, out, expect, "Expected Message not found")
 		assert.Contains(t, out, "OPEN", "Port should be open")
+	})
+	t.Run("CMD Portcheck Error", func(t *testing.T) {
+		out := ""
+		args := []string{
+			"service",
+			"portcheck",
+			"--filename", tnsFilename,
+			"--service", toalias,
+			"--info",
+			"--nodns",
+			"--unit-test",
+		}
+		out, err = common.CmdRun(RootCmd, args)
+		t.Logf(out)
+		assert.NoErrorf(t, err, "Check should succeed")
+		assert.Contains(t, out, "PROBLEM", "Port result should be PROBLEM")
 	})
 }
