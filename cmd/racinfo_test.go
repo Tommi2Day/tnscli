@@ -47,7 +47,7 @@ func TestRACInfo(t *testing.T) {
 	require.NoErrorf(t, err, "Create test rac.ora failed")
 	connectfilename := tnsAdminDir + "/connect2.ora"
 	//nolint gosec
-	_ = os.WriteFile(connectfilename, []byte(connectora), 0644)
+	_ = os.WriteFile(connectfilename, []byte(xealias+"="+xetest), 0644)
 	if os.Getenv("SKIP_DNS") != "" {
 		t.Skip("Skipping DNS testing in CI environment")
 	}

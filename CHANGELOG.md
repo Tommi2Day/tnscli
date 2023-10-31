@@ -1,5 +1,13 @@
 # Changelog tnscli
 
+## [v3.8.1 - 2023-10-30]
+### New
+- service info jdbc: replace TRANSPORT_CONNECT_TIMEOUT in JDBC connect string if set <1000 
+to be in milliseconds as required by Oracle JDBC >12.1. 
+You may disable this with --noModifyTransportConnectTimeout
+### fixed
+- service info jdbc: wrong jdbc prefix spelling
+
 ## [v3.8.0 - 2023-10-27]
 ### Changed
 - use go 1.21

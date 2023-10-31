@@ -172,6 +172,12 @@ Flags:
   -r, --racinfo string      path to racinfo.ini to resolve all RAC TCP Adresses, default $TNS_ADMIN/racinfo.ini
 
 
+tnscli service info jdbc [flags]
+printout jdbc string for the service
+Flags:
+  -h, --help                              help for jdbc
+      --noModifyTransportConnectTimeout   Do not modify TRANSPORT_CONNECT_TIMEOUT in ms
+
 
 tnscli list [flags]
 list all TNS Entries or search one
@@ -234,7 +240,7 @@ XE.LOCAL=  (DESCRIPTION =
 
 #give jdbc string for a service
 >tnscli service info jdbc xe -A test/testdata/
-jdbc:Oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XE)))
+jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XE)))
 
 #give target host and port for a service
 >tnscli service info server xe -A test/testdata/

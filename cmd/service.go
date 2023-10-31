@@ -72,7 +72,7 @@ var (
 )
 
 const defaultUser = "C##TCHECK"
-const defaultPassword = "C0nnectMe!now"
+const defaultPassword = "<MyCheckPassword>"
 const racinfoFile = "racinfo.ini"
 
 var dbUser = ""
@@ -88,6 +88,7 @@ var nameserver = ""
 var pingTimeout = 5
 var tcpcheck = false
 var dnstcp = false
+var noModifyTransportConnectTimeout = false
 
 func init() {
 	serviceCmd.PersistentFlags().StringVarP(&tnsKey, "service", "s", "", "service name to check")
@@ -112,6 +113,7 @@ func init() {
 	portcheckCmd.Flags().IntVarP(&pingTimeout, "timeout", "t", pingTimeout, "timeout for tcp ping")
 	portcheckCmd.Flags().BoolVar(&dnstcp, "dnstcp", false, "Use TCP to resolve DNS names")
 
+	jdbcInfoCmd.Flags().BoolVar(&noModifyTransportConnectTimeout, "noModifyTransportConnectTimeout", false, "Do not modify TRANSPORT_CONNECT_TIMEOUT in ms")
 	infoCmd.AddCommand(portInfoCmd)
 	infoCmd.AddCommand(jdbcInfoCmd)
 	infoCmd.AddCommand(tnsInfoCmd)
@@ -140,7 +142,7 @@ func getEntry(tnsKey string) (entry dblib.TNSEntry, err error) {
 
 	entry, found := dblib.GetEntry(tnsKey, tnsEntries, domain)
 	if !found {
-		err = fmt.Errorf("alias %s not found", tnsKey)
+		err = fmt.Errorf("xealias %s not found", tnsKey)
 		return
 	}
 	return
@@ -163,7 +165,7 @@ func portInfo(_ *cobra.Command, args []string) (err error) {
 		servers := entry.Servers
 		l := len(servers)
 		if l == 0 {
-			err = fmt.Errorf("alias %s: No hosts found", tnsKey)
+			err = fmt.Errorf("xealias %s: No hosts found", tnsKey)
 			return
 		}
 		log.Infof("Alias %s uses %d hosts", tnsKey, l)
@@ -253,19 +255,25 @@ func getTnsInfo(_ *cobra.Command, args []string) (err error) {
 	return
 }
 
+// getJdbcInfo prints the jdbc url for the given service
 func getJdbcInfo(_ *cobra.Command, args []string) (err error) {
+	out := ""
 	if tnsKey == "" {
 		tnsKey = args[0]
 	}
 	entry, err := getEntry(tnsKey)
-	if err == nil {
-		desc := entry.Desc
-		repl := strings.NewReplacer("\r", "", "\n", "", "\t", "", " ", "")
-		desc = repl.Replace(desc)
-		out := fmt.Sprintf("jdbc:Oracle:thin:@%s", desc)
-		log.Infof(out)
-		fmt.Println(out)
+	if err != nil {
+		return err
 	}
+	desc := entry.Desc
+	// disable TRANSPORT_CONNECT_TIMEOUT modification
+	if noModifyTransportConnectTimeout {
+		dblib.ModifyJDBCTransportConnectTimeout = false
+	}
+	out, err = dblib.GetJDBCUrl(desc)
+	log.Infof(out)
+	fmt.Println(out)
+
 	return
 }
 
@@ -371,7 +379,7 @@ func singleCheck(args []string, tnsEntries dblib.TNSEntries, domain string) (err
 		hv := ""
 		if ok {
 			if dbhostFlag && hostval == "" {
-				err = fmt.Errorf("database is available, but couldnt extract host info from database for alias %s, maybe login failed", tnsKey)
+				err = fmt.Errorf("database is available, but couldnt extract host info from database for xealias %s, maybe login failed", tnsKey)
 				return
 			}
 			if hostval != "" {
@@ -388,7 +396,7 @@ func singleCheck(args []string, tnsEntries dblib.TNSEntries, domain string) (err
 		}
 		return
 	}
-	err = fmt.Errorf("alias %s not found", tnsKey)
+	err = fmt.Errorf("xealias %s not found", tnsKey)
 	return
 }
 

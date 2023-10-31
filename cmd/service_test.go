@@ -18,32 +18,35 @@ const DBPASSWORD = "XE-manager21"
 const TIMEOUT = 5
 
 var dbhost = common.GetEnv("DB_HOST", "127.0.0.1")
-var connectora = fmt.Sprintf("XE.local=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))", dbhost, port)
+var xetest = fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))", dbhost, port)
 var target string
+
+const xealias = "XE.local"
 
 func TestOracleConnect(t *testing.T) {
 	if os.Getenv("SKIP_ORACLE") != "" {
 		t.Skip("Skipping ORACLE testing in CI environment")
 	}
-	const alias = "XE.local"
-	// t.Skip()
-	filename := tnsAdminDir + "/connect.ora"
-	//_ = os.Chdir(tnsAdminDir)
-	//nolint gosec
-	_ = os.WriteFile(filename, []byte(connectora), 0644)
 
-	t.Logf("load from %s", filename)
-	tnsEntries, domain, err := dblib.GetTnsnames(filename, true)
+	const toalias = "TOTEST.local"
+	const totest = "(DESCRIPTION=((TRANSPORT_CONNECT_TIMEOUT=3)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=totest)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=totest.local)))"
+	tnsFilename := tnsAdminDir + "/connect.ora"
+
+	//nolint gosec
+	_ = os.WriteFile(tnsFilename, []byte(xealias+"="+xetest+"\n\n"+toalias+"="+totest), 0644)
+
+	t.Logf("load from %s", tnsFilename)
+	tnsEntries, domain, err := dblib.GetTnsnames(tnsFilename, true)
 	t.Logf("Default Domain: '%s'", domain)
 	t.Run("Parse TNSNames.ora", func(t *testing.T) {
-		require.NoErrorf(t, err, "Parsing %s failed: %s", filename, err)
+		require.NoErrorf(t, err, "Parsing %s failed: %s", tnsFilename, err)
 	})
 	if err != nil {
 		t.Logf("load returned error: %s ", err)
 		return
 	}
 
-	e, found := dblib.GetEntry(alias, tnsEntries, domain)
+	e, found := dblib.GetEntry(xealias, tnsEntries, domain)
 	require.True(t, found, "Alias not found")
 	desc := common.RemoveSpace(e.Desc)
 	t.Logf("Desc:%s", desc)
@@ -66,15 +69,15 @@ func TestOracleConnect(t *testing.T) {
 		args := []string{
 			"service",
 			"check",
-			"--filename", filename,
-			"--service", alias,
+			"--filename", tnsFilename,
+			"--service", xealias,
 			"--info",
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := fmt.Sprintf("service %s connected", alias)
+		expect := fmt.Sprintf("service %s connected", xealias)
 		assert.Contains(t, out, expect, "Expected Message not found")
 		assert.Contains(t, out, "Connect OK, but Login error", "Expected Login Error not found")
 	})
@@ -83,8 +86,8 @@ func TestOracleConnect(t *testing.T) {
 		args := []string{
 			"service",
 			"check",
-			"--filename", filename,
-			"--service", alias,
+			"--filename", tnsFilename,
+			"--service", xealias,
 			"--user", DBUSER,
 			"--password", DBPASSWORD,
 			"--timeout", fmt.Sprintf("%d", TIMEOUT),
@@ -94,7 +97,7 @@ func TestOracleConnect(t *testing.T) {
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := fmt.Sprintf("service %s connected", alias)
+		expect := fmt.Sprintf("service %s connected", xealias)
 		assert.Contains(t, out, expect, "Expected Message not found")
 	})
 	t.Run("CMD false Check", func(t *testing.T) {
@@ -102,22 +105,22 @@ func TestOracleConnect(t *testing.T) {
 		args := []string{
 			"service",
 			"check",
-			"--filename", filename,
+			"--filename", tnsFilename,
 			"--service", "dummy",
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.Errorf(t, err, "Check should fail")
-		assert.Contains(t, out, "Error: alias dummy not found", "Expected Message not found")
+		assert.Contains(t, out, "Error: xealias dummy not found", "Expected Message not found")
 	})
 	t.Run("CMD DBHOST Query", func(t *testing.T) {
 		out := ""
 		args := []string{
 			"service",
 			"check",
-			"--filename", filename,
-			"--service", alias,
+			"--filename", tnsFilename,
+			"--service", xealias,
 			"--dbhost",
 			"--user", DBUSER,
 			"--password", DBPASSWORD,
@@ -128,7 +131,7 @@ func TestOracleConnect(t *testing.T) {
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := fmt.Sprintf("service %s connected", alias)
+		expect := fmt.Sprintf("service %s connected", xealias)
 		assert.Contains(t, out, expect, "Expected connect Message not found")
 		expect = "Query returned"
 		assert.Contains(t, out, expect, "Expected Query Message not found")
@@ -139,8 +142,8 @@ func TestOracleConnect(t *testing.T) {
 			"service",
 			"info",
 			"ports",
-			"--filename", filename,
-			"--service", alias,
+			"--filename", tnsFilename,
+			"--service", xealias,
 			"--info",
 			"--nodns",
 			"--unit-test",
@@ -148,26 +151,65 @@ func TestOracleConnect(t *testing.T) {
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := fmt.Sprintf("Alias %s uses", alias)
+		expect := fmt.Sprintf("Alias %s uses", xealias)
 		assert.Contains(t, out, expect, "Expected Message not found")
 	})
-
 	t.Run("CMD JDBC info", func(t *testing.T) {
-		out := ""
-		args := []string{
-			"service",
-			"info",
-			"jdbc",
-			"--filename", filename,
-			"--service", alias,
-			"--info",
-			"--unit-test",
-		}
-		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
-		assert.NoErrorf(t, err, "Check should succeed")
-		expect := "jdbc:oracle:thin:@("
-		assert.Contains(t, out, expect, "Expected Message not found")
+		const jdbcprefix = "jdbc:oracle:thin:@"
+		t.Run("CMD JDBC info normal", func(t *testing.T) {
+			out := ""
+			args := []string{
+				"service",
+				"info",
+				"jdbc",
+				"--filename", tnsFilename,
+				"--service", xealias,
+				"--info",
+				"--unit-test",
+			}
+			out, err = common.CmdRun(RootCmd, args)
+			t.Logf(out)
+			assert.NoErrorf(t, err, "Check should succeed")
+			expect := jdbcprefix + xetest
+			assert.Contains(t, out, expect, "Expected Message not found")
+		})
+
+		t.Run("CMD JDBC Timeout replaced", func(t *testing.T) {
+			out := ""
+			args := []string{
+				"service",
+				"info",
+				"jdbc",
+				"--filename", tnsFilename,
+				"--service", toalias,
+				"--info",
+				"--unit-test",
+			}
+			out, err = common.CmdRun(RootCmd, args)
+			t.Logf(out)
+			assert.NoErrorf(t, err, "Check should succeed")
+			expect := jdbcprefix + totest
+			expect = strings.ReplaceAll(expect, "TIMEOUT=3)", "TIMEOUT=3000)")
+			assert.Contains(t, out, expect, "Expected Message not found")
+		})
+		t.Run("CMD JDBC Timeout not replaced", func(t *testing.T) {
+			out := ""
+			args := []string{
+				"service",
+				"info",
+				"jdbc",
+				"--filename", tnsFilename,
+				"--service", toalias,
+				"--noModifyTransportConnectTimeout",
+				"--info",
+				"--unit-test",
+			}
+			out, err = common.CmdRun(RootCmd, args)
+			t.Logf(out)
+			assert.NoErrorf(t, err, "Check should succeed")
+			expect := jdbcprefix + totest
+			assert.Contains(t, out, expect, "Expected Message not found")
+		})
 	})
 	t.Run("CMD TNS info", func(t *testing.T) {
 		out := ""
@@ -175,15 +217,15 @@ func TestOracleConnect(t *testing.T) {
 			"service",
 			"info",
 			"tns",
-			"--filename", filename,
-			"--service", alias,
+			"--filename", tnsFilename,
+			"--service", xealias,
 			"--info",
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := strings.ToUpper(alias)
+		expect := strings.ToUpper(xealias)
 		assert.Contains(t, strings.ToUpper(out), expect, "Expected Message '%s' not found", expect)
 	})
 
@@ -192,8 +234,8 @@ func TestOracleConnect(t *testing.T) {
 		args := []string{
 			"service",
 			"portcheck",
-			"--filename", filename,
-			"--service", alias,
+			"--filename", tnsFilename,
+			"--service", xealias,
 			"--info",
 			"--nodns",
 			"--unit-test",
