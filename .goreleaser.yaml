@@ -19,7 +19,7 @@ builds:
     ldflags:
       - -s -w
       - -X {{ .ProjectName }}/cmd.Version={{.Version}}
-      - -X {{ .ProjectName }}/cmd/.Commit={{.ShortCommit}}
+      - -X {{ .ProjectName }}/cmd.Commit={{.ShortCommit}}
       - -X {{ .ProjectName }}/cmd.Date={{time "2006-01-02"}}
       - -X {{ .ProjectName }}/cmd.Name={{.ProjectName}}
 
@@ -45,7 +45,7 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  name_template: "{{ incpatch .Version }}-beta"
 
 archives:
   - id: archive
@@ -53,30 +53,10 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+    strip_parent_binary_folder: true
 
 nfpms:
-  - id: deb-packages
-    # dont use {{ .ProjectName }} here :(
-    package_name: tnscli
-    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    # builds:
-    license: GPL-3
-    bindir: /usr/bin
-    vendor: Tommi2Day
-    maintainer: "Tommi2Day <tommi2day@github.com>"
-    description: |-
-      Small Oracle TNS Service and Connect Test Tool
-    formats:
-      - deb
-    # dependencies:
-    provides:
-      # dont use {{ .ProjectName }} here :(
-      - tnscli
-    contents:
-      - src: scripts/*
-        dst: /usr/local/bin
-
-  - id: rpm-packages
+  - id: packages
     # dont use {{ .ProjectName }} here :(
     package_name: tnscli
     file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
@@ -86,6 +66,7 @@ nfpms:
       Small Oracle TNS Service and Connect Test Tool
     formats:
       - rpm
+      - deb
     # dependencies:
     provides:
       # dont use {{ .ProjectName }} here :(
