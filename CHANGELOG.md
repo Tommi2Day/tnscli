@@ -1,5 +1,13 @@
 # Changelog tnscli
 
+## [v3.8.3 - 2024-02-19]
+### Changed
+- update gomodules to v1.11.4
+- update dependencies
+- remove tools.go
+### Fixed
+- fix goreleaser version
+
 ## [v3.8.2 - 2023-10-31]
 ### New
 - service info jdbc: replace TRANSPORT_CONNECT_TIMEOUT in JDBC connect string if set <1000 
