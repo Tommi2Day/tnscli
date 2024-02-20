@@ -37,4 +37,5 @@ jobs:
         with:
           go-version-file: "go.mod"
           check-latest: true
+          cache: false
       - uses: "golangci/golangci-lint-action@v4"
