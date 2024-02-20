@@ -8,10 +8,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/spf13/viper"
-
+	"github.com/manifoldco/promptui"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/tommi2day/gomodules/dblib"
 	"github.com/tommi2day/gomodules/ldaplib"
 )
@@ -27,6 +27,7 @@ const (
 // TWorkStatus structure to handover statistics
 type TWorkStatus map[string]int
 
+var inputReader = os.Stdin
 var (
 	// check represents the list command
 	ldapCmd = &cobra.Command{
@@ -42,7 +43,7 @@ var ldapReadCmd = &cobra.Command{
 	Short:        "prints ldap tns entries to stdout",
 	Long:         `read tns entries from LDAP Server`,
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		log.Debug("ldapRead called")
 		return ldapRead()
 	},
@@ -53,7 +54,7 @@ var ldapWriteCmd = &cobra.Command{
 	Short:        "update ldap tns entries",
 	Long:         `update LDAP Entries from tnsnames.ora`,
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		log.Debug("ldapWrite called")
 		return ldapWrite()
 	},
@@ -65,7 +66,7 @@ var ldapClearCmd = &cobra.Command{
 	Short:        "clear ldap tns entries",
 	Long:         `clear oracle TNS LDAP Entries below BaseDN`,
 	SilenceUsage: true,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		log.Debug("ldapClear called")
 		return ldapClear()
 	},
@@ -116,12 +117,20 @@ func initLdapConfig() {
 	if contextDN == "" {
 		contextDN = viper.GetString("ldap.oraclectx")
 	}
+	// read BindDN and Password from env and config if not set on commandline
+	if ldapBindDN == "" {
+		ldapBindDN = os.Getenv("LDAP_BIND_DN")
+	}
 	if ldapBindDN == "" {
 		ldapBindDN = viper.GetString("ldap.binddn")
+	}
+	if ldapBindPassword == "" && ldapBindDN != "" {
+		ldapBindPassword = os.Getenv("LDAP_BIND_PASSWORD")
 	}
 	if ldapBindPassword == "" {
 		ldapBindPassword = viper.GetString("ldap.bindpassword")
 	}
+
 	if !ldapTLS {
 		ldapTLS = viper.GetBool("ldap.tls")
 	}
@@ -141,6 +150,14 @@ func ldapConnect() (lc *ldaplib.LdapConfigType, err error) {
 	}
 	if len(ldapBaseDN) == 0 && len(contextDN) > 0 {
 		ldapBaseDN = strings.ReplaceAll(contextDN, "cn=OracleContext,", "")
+	}
+	if ldapBindPassword == "" && ldapBindDN != "" {
+		log.Debugf("Ask for Bind Password")
+		ldapBindPassword, _ = promptPassword("Enter LDAP Bind Password:")
+		if ldapBindPassword == "" {
+			err = fmt.Errorf("no bind password given")
+			return
+		}
 	}
 	lc, err = doConnect(servers)
 	if err != nil {
@@ -479,4 +496,19 @@ func buildStatusMap(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, con
 		}
 	}
 	return ldapTNS, ldapstatus, err
+}
+
+func promptPassword(label string) (pw string, err error) {
+	prompt := promptui.Prompt{
+		Label: label,
+		Mask:  '*',
+		Stdin: inputReader,
+	}
+
+	result, err := prompt.Run()
+	if err != nil {
+		return
+	}
+	pw = result
+	return
 }

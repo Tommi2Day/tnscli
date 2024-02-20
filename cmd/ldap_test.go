@@ -9,6 +9,7 @@ import (
 	"github.com/tommi2day/tnscli/test"
 
 	"github.com/go-ldap/ldap/v3"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tommi2day/gomodules/common"
@@ -28,8 +29,7 @@ const (
 )
 const ldapTimeout = 20
 */
-const ldapOrganisation = "TNS Ltd"
-const LdapDomain = "oracle.local"
+
 const LdapBaseDn = "dc=oracle,dc=local"
 const LdapAdminUser = "cn=admin," + LdapBaseDn
 const LdapAdminPassword = "admin"
@@ -66,16 +66,16 @@ new =(DESCRIPTION =
 (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = new))
 )
 `
-const ldapOra = `
+const ldapora = `
 DEFAULT_ADMIN_CONTEXT = "dc=oracle,dc=local"
-DIRECTORY_SERVERS = (localhost:1389:1636, ldap:389)
+DIRECTORY_SERVERS = (localhost:1389:1636, localhost:1389)
 DIRECTORY_SERVER_TYPE = OID
 `
 
 func TestOracleLdap(t *testing.T) {
 	var err error
 	var server string
-	var sslport int
+	var port int
 	var out = ""
 	var domain string
 	var fileTnsEntries dblib.TNSEntries
@@ -90,7 +90,7 @@ func TestOracleLdap(t *testing.T) {
 	tnsSource2 := path.Join(tnsAdmin, "/ldap_file_write2.ora")
 
 	//nolint gosec
-	err = os.WriteFile(ldapAdmin+"/ldap.ora", []byte(ldapOra), 0644)
+	err = os.WriteFile(ldapAdmin+"/ldap.ora", []byte(ldapora), 0644)
 	require.NoErrorf(t, err, "Create test ldap.ora failed")
 
 	// prepare or skip container based tests
@@ -101,7 +101,7 @@ func TestOracleLdap(t *testing.T) {
 	require.NoErrorf(t, err, "Ldap Server not available")
 	require.NotNil(t, ldapContainer, "Prepare failed")
 	defer common.DestroyDockerContainer(ldapContainer)
-	server, sslport = common.GetContainerHostAndPort(ldapContainer, "636/tcp")
+	server, port = common.GetContainerHostAndPort(ldapContainer, "1389/tcp")
 	// create test file to load
 
 	//nolint gosec
@@ -122,16 +122,16 @@ func TestOracleLdap(t *testing.T) {
 		}
 		t.Logf("Ldap Config: H:%s,P:%d,B:%s,T:%v", lc.Server, lc.Port, lc.BaseDN, lc.TLS)
 		assert.Equal(t, ldapBaseDN, lc.BaseDN, "BaseDN not as expected")
-		assert.Equal(t, 389, lc.Port, "Port not as expected")
-		assert.Equal(t, "ldap", lc.Server, "Host not as expected")
+		assert.Equal(t, 1389, lc.Port, "Port not as expected")
+		assert.Equal(t, "localhost", lc.Server, "Host not as expected")
 		assert.Equal(t, false, lc.TLS, "TLS flag not as expected")
 	})
 	base := LdapBaseDn
-	lc := ldaplib.NewConfig(server, sslport, true, true, base, ldapTimeout)
+	lc := ldaplib.NewConfig(server, port, false, false, base, ldapTimeout)
 	context := ""
 
 	t.Run("Ldap Connect", func(t *testing.T) {
-		t.Logf("Connect '%s' using SSL on port %d", LdapAdminUser, sslport)
+		t.Logf("Connect '%s' on port %d", LdapAdminUser, port)
 		err = lc.Connect(LdapAdminUser, LdapAdminPassword)
 		require.NoErrorf(t, err, "admin Connect returned error %v", err)
 		assert.NotNilf(t, lc.Conn, "Ldap Connect is nil")
@@ -219,9 +219,7 @@ func TestOracleLdap(t *testing.T) {
 			"write",
 			"--ldap.oraclectx", LdapBaseDn,
 			"--ldap.host", server,
-			"--ldap.port", fmt.Sprintf("%d", sslport),
-			"--ldap.tls", "true",
-			"--ldap.insecure", "true",
+			"--ldap.port", fmt.Sprintf("%d", port),
 			"--ldap.base", LdapBaseDn,
 			"--ldap.binddn", LdapAdminUser,
 			"--ldap.bindpassword", LdapAdminPassword,
@@ -239,12 +237,12 @@ func TestOracleLdap(t *testing.T) {
 		tnsAdmin = test.TestData
 		filename = tnsAdmin + "/ldap_file_read.ora"
 		_ = os.Remove(filename)
-		_ = os.Setenv("TNSCLI_LDAP_BINDPASSWORD", LdapAdminPassword)
+		_ = os.Setenv("LDAP_BIND_PASSWORD", LdapAdminPassword)
 		args := []string{
 			"ldap",
 			"read",
 			"--ldap.host", server,
-			"--ldap.port", fmt.Sprintf("%d", sslport),
+			"--ldap.port", fmt.Sprintf("%d", port),
 			"--ldap.tnstarget", filename,
 			"--config", testConfig,
 			"--info",
@@ -257,20 +255,30 @@ func TestOracleLdap(t *testing.T) {
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")
 	})
 
-	t.Run("Clear TNS Entries from Ldap with config file and env", func(t *testing.T) {
-		_ = os.Setenv("TNSCLI_LDAP_BINDPASSWORD", LdapAdminPassword)
+	t.Run("Clear TNS Entries from Ldap with config file prompt password", func(t *testing.T) {
+		_ = os.Setenv("LDAP_BIND_PASSWORD", "")
+		ldapBaseDN = ""
+		ldapBindPassword = ""
+		r, w, err := os.Pipe()
+		require.NoErrorf(t, err, "Pipe failed")
+		inputReader = r
 		args := []string{
 			"ldap",
 			"clear",
 			"--ldap.host", server,
-			"--ldap.port", fmt.Sprintf("%d", sslport),
+			"--ldap.port", fmt.Sprintf("%d", port),
 			"--config", testConfig,
 			"--info",
 			"--unit-test",
 		}
+		// write to Stdin
+		_, _ = w.WriteString(fmt.Sprintf("%s\n", LdapAdminPassword))
+
 		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error:%s", err)
 		t.Logf(out)
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")
+		inputReader = os.Stdin
+		_ = w.Close()
 	})
 }
