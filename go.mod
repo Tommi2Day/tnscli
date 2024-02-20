@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/go-ldap/ldap/v3 v3.4.6
+	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/sijms/go-ora/v2 v2.8.7
@@ -23,6 +24,7 @@ require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/continuity v0.4.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
