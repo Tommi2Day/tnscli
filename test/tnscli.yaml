@@ -6,9 +6,9 @@ ldap:
  base: "dc=oracle,dc=local"
  oraclectx: "dc=oracle,dc=local"
  host: "localhost"
- port: 1636
- tls: true
- insecure: true
+ port: 2389
+ tls: false
+ insecure: false
  binddn: "cn=admin,dc=oracle,dc=local"
  #bindpassword: "admin"
  timeout: 20

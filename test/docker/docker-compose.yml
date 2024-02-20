@@ -1,0 +1,59 @@
+version: '3.8'
+name: tnslib
+services:
+  oracle:
+    image: 'gvenzl/oracle-free:23.3-slim'
+    restart: "no"
+    environment:
+      - 'ORACLE_PASSWORD=FREE-Manager21'
+    ports:
+      - '21521:1521'
+    volumes:
+      - "./oracle-db:/container-entrypoint-initdb.d"
+
+  ldap:
+    image: "${VENDOR_IMAGE_PREFIX}docker.io/bitnami/openldap:2.6.7"
+    restart: "no"
+    hostname: "ldap.oracle.local"
+    ports:
+        - '2389:1389'
+    volumes:
+      - "./oracle-ldap/ldif:/bootstrap/ldif:ro"
+      - "./oracle-ldap/schema:/bootstrap/schema:ro"
+      - "./oracle-ldap/entrypoint:/docker-entrypoint-initdb.d"
+    environment:
+        - LDAP_PORT_NUMBER=1389
+        - BITNAMI_DEBUG=true
+        - LDAP_ROOT=dc=oracle,dc=local
+        - LDAP_ADMIN_USERNAME=admin
+        - LDAP_ADMIN_PASSWORD=admin
+        - LDAP_CONFIG_ADMIN_ENABLED=yes
+        - LDAP_CONFIG_ADMIN_USERNAME=config
+        - LDAP_CONFIG_ADMIN_PASSWORD=config
+        - LDAP_SKIP_DEFAULT_TREE=yes
+        - LDAP_CUSTOM_LDIF_DIR=/bootstrap/ldif
+        - LDAP_CUSTOM_SCHEMA_DIR=/bootstrap/schema
+        - LDAP_ADD_SCHEMAS=yes
+        - LDAP_EXTRA_SCHEMAS=cosine,inetorgperson,nis
+        - LDAP_ALLOW_ANON_BINDING=yes
+
+  dns:
+    image: "tnslib-dns:latest"
+    build:
+      context: dns
+      dockerfile: dns/Dockerfile
+      args:
+        VENDOR_IMAGE_PREFIX: ${VENDOR_IMAGE_PREFIX}
+        BIND9_VERSION: "9.18"
+    ports:
+      - '2053:53/tcp'
+      - '2053:53/udp'
+      - '2953:953/tcp'
+    restart: "no"
+    hostname: "dns.test.local"
+    networks:
+      - dns
+      - default
+networks:
+    dns:
+        driver: bridge
