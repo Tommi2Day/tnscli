@@ -1,0 +1,39 @@
+# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
+# CRC32 76b027ec
+dn: cn=oidbase,cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: oidbase
+olcAttributeTypes: {0}( 2.16.840.1.113894.7.1.1 NAME 'orclVersion' EQUALITY 
+ caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {1}( 2.16.840.1.113894.7.1.2 NAME 'orclOracleHome' SYNTAX
+  1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {2}( 2.16.840.1.113894.7.1.3 NAME 'orclSystemName' EQUALI
+ TY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {3}( 2.16.840.1.113894.7.1.4 NAME 'orclServiceType' EQUAL
+ ITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {4}( 2.16.840.1.113894.7.1.5 NAME 'orclSid' EQUALITY case
+ IgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {5}( 2.16.840.1.113894.7.1.6 NAME 'orclProductVersion' EQ
+ UALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {6}( 2.16.840.1.113894.3.1.12 NAME 'orclNetDescName' EQUA
+ LITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 SINGLE-VAL
+ UE )
+olcAttributeTypes: {7}( 2.16.840.1.113894.3.1.13 NAME 'orclNetDescString' EQ
+ UALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcObjectClasses: {0}( 2.16.840.1.113894.7.2.2 NAME 'orclContainer' SUP top 
+ STRUCTURAL MUST cn )
+olcObjectClasses: {1}( 2.16.840.1.113894.7.2.3 NAME 'orclContext' SUP top ST
+ RUCTURAL MUST cn )
+olcObjectClasses: {2}( 2.16.840.1.113894.7.2.6 NAME 'orclSchemaVersion' SUP 
+ top STRUCTURAL MUST ( cn $ orclProductVersion ) )
+olcObjectClasses: {3}( 2.16.840.1.113894.7.2.1001 NAME 'orclService' SUP top
+  STRUCTURAL MUST cn MAY ( orclServiceType $ orclOracleHome $ orclSystemName
+  $ orclSid $ orclNetDescName $ orclNetDescString $ orclVersion $ Descriptio
+ n ) )
+
+
+
+
+
+
+

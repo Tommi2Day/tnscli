@@ -1,0 +1,48 @@
+# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
+# CRC32 602a83d1
+dn: cn=oidrdbms,cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: oidrdbms
+olcAttributeTypes: {0}( 2.16.840.1.113894.2.1.1 NAME 'orclDBtrustedUser' EQU
+ ALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {1}( 2.16.840.1.113894.2.1.2 NAME 'orclDBServerMember' EQ
+ UALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {2}( 2.16.840.1.113894.2.1.3 NAME 'orclDBEntUser' EQUALIT
+ Y distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {3}( 2.16.840.1.113894.2.1.4 NAME 'orclDBEntRoleAssigned'
+  EQUALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {4}( 2.16.840.1.113894.2.1.5 NAME 'orclDBServerRole' EQUA
+ LITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {5}( 2.16.840.1.113894.2.1.6 NAME 'orclDBTrustedDomain' E
+ QUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {6}( 2.16.840.1.113894.2.1.7 NAME 'orclDBRoleOccupant' EQ
+ UALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 )
+olcAttributeTypes: {7}( 2.16.840.1.113894.2.1.8 NAME 'orclDBDistinguishedNam
+ e' EQUALITY distinguishedNameMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 SIN
+ GLE-VALUE )
+olcAttributeTypes: {8}( 2.16.840.1.113894.2.1.9 NAME 'orclDBNativeUser' EQUA
+ LITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {9}( 2.16.840.1.113894.2.1.10 NAME 'orclDBGlobalName' EQU
+ ALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcObjectClasses: {0}( 2.16.840.1.113894.2.2.1 NAME 'orclDBServer' SUP orclS
+ ervice STRUCTURAL MAY ( userCertificate $ orclDBtrustedUser $ orclDBGlobalN
+ ame ) )
+olcObjectClasses: {1}( 2.16.840.1.113894.2.2.2 NAME 'orclDBEnterpriseDomain'
+  SUP top STRUCTURAL MUST cn MAY ( orclDBServerMember $ orclDBEntUser $ orcl
+ DBTrustedDomain ) )
+olcObjectClasses: {2}( 2.16.840.1.113894.2.2.3 NAME 'orclDBEnterpriseRole' S
+ UP top STRUCTURAL MUST cn MAY ( orclDBServerRole $ orclDBEntRoleAssigned $ 
+ description $ seeAlso $ o $ ou $ orclDBRoleOccupant ) )
+olcObjectClasses: {3}( 2.16.840.1.113894.2.2.4 NAME 'orclDBEntryLevelMapping
+ ' SUP top STRUCTURAL MUST cn MAY ( orclDBDistinguishedName $ orclDBNativeUs
+ er ) )
+olcObjectClasses: {4}( 2.16.840.1.113894.2.2.5 NAME 'orclDBSubtreeLevelMappi
+ ng' SUP top STRUCTURAL MUST cn MAY ( orclDBDistinguishedName $ orclDBNative
+ User ) )
+
+
+
+
+
+
+

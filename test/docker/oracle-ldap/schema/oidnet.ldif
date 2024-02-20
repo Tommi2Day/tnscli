@@ -1,0 +1,75 @@
+# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
+# CRC32 a967d99b
+dn: cn=oidnet,cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: oidnet
+olcAttributeTypes: {0}( 2.16.840.1.113894.3.1.1 NAME 'orclNetSourceRoute' SY
+ NTAX 1.3.6.1.4.1.1466.115.121.1.5 SINGLE-VALUE )
+olcAttributeTypes: {1}( 2.16.840.1.113894.3.1.2 NAME 'orclNetLoadBalance' SY
+ NTAX 1.3.6.1.4.1.1466.115.121.1.5 SINGLE-VALUE )
+olcAttributeTypes: {2}( 2.16.840.1.113894.3.1.3 NAME 'orclNetFailover' SYNTA
+ X 1.3.6.1.4.1.1466.115.121.1.5 SINGLE-VALUE )
+olcAttributeTypes: {3}( 2.16.840.1.113894.3.1.4 NAME 'orclNetSdu' EQUALITY c
+ aseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {4}( 2.16.840.1.113894.3.1.5 NAME 'orclNetServer' EQUALIT
+ Y caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {5}( 2.16.840.1.113894.3.1.6 NAME 'orclNetServiceName' EQ
+ UALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {6}( 2.16.840.1.113894.3.1.7 NAME 'orclNetInstanceName' E
+ QUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {7}( 2.16.840.1.113894.3.1.8 NAME 'orclNetHandlerName' EQ
+ UALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {8}( 2.16.840.1.113894.3.1.9 NAME 'orclNetParamList' EQUA
+ LITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {9}( 2.16.840.1.113894.3.1.10 NAME 'orclNetAuthentication
+ Type' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-
+ VALUE )
+olcAttributeTypes: {10}( 2.16.840.1.113894.3.1.11 NAME 'orclNetAuthParams' E
+ QUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {11}( 2.16.840.1.113894.3.1.14 NAME 'orclNetAddressString
+ ' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALU
+ E )
+olcAttributeTypes: {12}( 2.16.840.1.113894.3.1.15 NAME 'orclNetProtocol' EQU
+ ALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {13}( 2.16.840.1.113894.3.1.16 NAME 'orclNetShared' EQUAL
+ ITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcAttributeTypes: {14}( 2.16.840.1.113894.3.1.17 NAME 'orclNetAddrList' EQU
+ ALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {15}( 2.16.840.1.113894.3.1.18 NAME 'orclNetProtocolStack
+ ' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALU
+ E )
+olcAttributeTypes: {16}( 2.16.840.1.113894.3.1.19 NAME 'orclNetDescList' EQU
+ ALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {17}( 2.16.840.1.113894.3.1.20 NAME 'orclNetConnParamList
+ ' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+olcAttributeTypes: {18}( 2.16.840.1.113894.3.1.21 NAME 'orclNetAuthenticatio
+ nService' EQUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SIN
+ GLE-VALUE )
+olcObjectClasses: {0}( 2.16.840.1.113894.3.2.5 NAME 'orclNetService' SUP top
+  STRUCTURAL MUST cn MAY ( orclNetDescName $ orclNetDescString $ orclVersion
+  $ Description ) )
+olcObjectClasses: {1}( 2.16.840.1.113894.3.2.4 NAME 'orclNetDescriptionList'
+  SUP top STRUCTURAL MUST cn MAY ( orclNetDescList $ orclNetSourceRoute $ or
+ clNetLoadBalance $ orclNetFailover $ orclNetShared $ orclVersion $ Descript
+ ion ) )
+olcObjectClasses: {2}( 2.16.840.1.113894.3.2.3 NAME 'orclNetDescription' SUP
+  top STRUCTURAL MUST cn MAY ( orclNetAddrList $ orclNetProtocolStack $ orcl
+ NetSdu $ orclSid $ orclNetServer $ orclNetServiceName $ orclNetInstanceName
+  $ orclNetHandlerName $ orclOracleHome $ orclNetAuthenticationType $ orclNe
+ tAuthenticationService $ orclNetAuthParams $ orclNetParamList $ orclNetConn
+ ParamList $ orclNetSourceRoute $ orclNetLoadBalance $ orclNetFailover $ orc
+ lNetShared $ orclVersion $ Description ) )
+olcObjectClasses: {3}( 2.16.840.1.113894.3.2.2 NAME 'orclNetAddressList' SUP
+  top STRUCTURAL MUST cn MAY ( orclNetAddrList $ orclNetSourceRoute $ orclNe
+ tLoadBalance $ orclNetFailover $ orclNetShared $ orclVersion $ Description 
+ ) )
+olcObjectClasses: {4}( 2.16.840.1.113894.3.2.1 NAME 'orclNetAddress' SUP top
+  STRUCTURAL MUST cn MAY ( orclNetAddressString $ orclNetProtocol $ orclNetS
+ hared $ orclVersion $ Description ) )
+
+
+
+
+
+
+

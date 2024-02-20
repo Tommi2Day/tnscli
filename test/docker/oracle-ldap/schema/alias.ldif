@@ -1,0 +1,16 @@
+# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
+# CRC32 d5e08ccf
+dn: cn=alias,cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: alias
+olcAttributeTypes: {0}( 2.16.840.1.113894.3.2.6 NAME 'orclNetServiceAlias' E
+ QUALITY caseIgnoreMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+olcObjectClasses: {0}( 2.16.840.1.113894.3.2.6 NAME 'orclNetServiceAlias' SU
+ P alias STRUCTURAL MUST cn )
+
+
+
+
+
+
+

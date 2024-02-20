@@ -5,20 +5,19 @@ import (
 	"os"
 	"time"
 
+	"github.com/tommi2day/gomodules/common"
 	"github.com/tommi2day/tnscli/test"
 
-	"github.com/tommi2day/gomodules/common"
-
-	ldap "github.com/go-ldap/ldap/v3"
-	dockertest "github.com/ory/dockertest/v3"
+	"github.com/go-ldap/ldap/v3"
+	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 )
 
-const Ldaprepo = "docker.io/osixia/openldap"
-const LdaprepoTag = "1.5.0"
+const Ldaprepo = "docker.io/bitnami/openldap"
+const LdaprepoTag = "2.6.7"
 const LdapcontainerTimeout = 120
 
-var ldapcontainerName string
+var LdapcontainerName string
 var ldapContainer *dockertest.Resource
 
 // prepareContainer create an OpenLdap Docker Container
@@ -27,11 +26,10 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 		err = fmt.Errorf("skipping LDAP Container in CI environment")
 		return
 	}
-	ldapcontainerName = os.Getenv("LDAP_CONTAINER_NAME")
-	if ldapcontainerName == "" {
-		ldapcontainerName = "tnscli-ldap"
+	LdapcontainerName = os.Getenv("LDAP_CONTAINER_NAME")
+	if LdapcontainerName == "" {
+		LdapcontainerName = "tnscli-ldap"
 	}
-
 	var pool *dockertest.Pool
 	pool, err = common.GetDockerPool()
 	if err != nil {
@@ -45,21 +43,28 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 		Repository: repoString,
 		Tag:        LdaprepoTag,
 		Env: []string{
-			"LDAP_ORGANISATION=" + ldapOrganisation,
-			"LDAP_DOMAIN=" + LdapDomain,
-			"LDAP_BASE_DN=" + LdapBaseDn,
+			"LDAP_PORT_NUMBER=1389",
+			"BITNAMI_DEBUG=true",
+			"LDAP_ROOT=" + LdapBaseDn,
+			"LDAP_ADMIN_USERNAME=admin",
 			"LDAP_ADMIN_PASSWORD=" + LdapAdminPassword,
-			"LDAP_CONFIG_PASSWORD=" + LdapConfigPassword,
-			"LDAP_TLS_VERIFY_CLIENT=never",
-			"LDAP_SEED_INTERNAL_LDIF_PATH=/bootstrap/ldif",
-			"LDAP_SEED_INTERNAL_SCHEMA_PATH=/bootstrap/schema",
+			"LDAP_CONFIG_ADMIN_ENABLED=yes",
+			"LDAP_CONFIG_ADMIN_USERNAME=config",
+			"LDAP_CONFIG_ADMIN_PASSWORD=" + LdapConfigPassword,
+			"LDAP_SKIP_DEFAULT_TREE=yes",
+			"LDAP_CUSTOM_LDIF_DIR=/bootstrap/ldif",
+			"LDAP_CUSTOM_SCHEMA_DIR=/bootstrap/schema",
+			"LDAP_ADD_SCHEMAS=yes",
+			"LDAP_EXTRA_SCHEMAS=cosine,inetorgperson,nis",
+			"LDAP_ALLOW_ANON_BINDING=yes",
 		},
 		Mounts: []string{
-			test.TestDir + "/oracle-ldap/ldif:/bootstrap/ldif:ro",
-			test.TestDir + "/oracle-ldap/schema:/bootstrap/schema:ro",
+			test.TestDir + "/docker/oracle-ldap/ldif:/bootstrap/ldif:ro",
+			test.TestDir + "/docker/oracle-ldap/schema:/bootstrap/schema:ro",
+			test.TestDir + "/docker/oracle-ldap/entrypoint:/docker-entrypoint-initdb.d",
 		},
-		Hostname: ldapcontainerName,
-		Name:     ldapcontainerName,
+		Hostname: LdapcontainerName,
+		Name:     LdapcontainerName,
 	}, func(config *docker.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
 		config.AutoRemove = true
@@ -72,7 +77,7 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 	}
 
 	pool.MaxWait = LdapcontainerTimeout * time.Second
-	myhost, myport := common.GetContainerHostAndPort(container, "389/tcp")
+	myhost, myport := common.GetContainerHostAndPort(container, "1389/tcp")
 	dialURL := fmt.Sprintf("ldap://%s:%d", myhost, myport)
 	fmt.Printf("Wait to successfully connect to Ldap with %s (max %ds)...\n", dialURL, LdapcontainerTimeout)
 	start := time.Now()
@@ -85,8 +90,8 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 		return
 	}
 	_ = l.Close()
-	// wait 5s to init container
-	time.Sleep(5 * time.Second)
+	// wait 15s to init container
+	time.Sleep(15 * time.Second)
 	elapsed := time.Since(start)
 	fmt.Printf("LDAP Container is available after %s\n", elapsed.Round(time.Millisecond))
 	err = nil
