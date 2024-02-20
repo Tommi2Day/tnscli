@@ -1,9 +1,10 @@
 # ldapadd -c -x -D "cn=admin,dc=oracle,dc=local" -W -f ldap_db_init.ldif
 #add_Base.ldap
-#dn: dc=oracle,dc=local
-#objectClass: top
-#objectClass: dcObject
-#objectClass: organization
+dn: dc=oracle,dc=local
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: oracle
 
 # Users
 dn: ou=Users,dc=oracle,dc=local

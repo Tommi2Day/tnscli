@@ -82,7 +82,7 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 	container, err = pool.BuildAndRunWithBuildOptions(
 		&dockertest.BuildOptions{
 			BuildArgs:  buildArgs,
-			ContextDir: test.TestDir + "/dns",
+			ContextDir: test.TestDir + "/docker/dns",
 			Dockerfile: "Dockerfile",
 		},
 		&dockertest.RunOptions{
@@ -90,22 +90,6 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 			Name:         dnscontainerName,
 			Networks:     []*dockertest.Network{dnsnetwork},
 			ExposedPorts: []string{"53/tcp", "53/udp", "953/tcp"},
-
-			/*
-				// need fixed mapping here
-				PortBindings: map[docker.Port][]docker.PortBinding{
-					"53/tcp": {
-						{HostIP: "0.0.0.0", HostPort: dnsport},
-					},
-
-					"53/udp": {
-						{HostIP: "0.0.0.0", HostPort: dnsport},
-					},
-					"953/tcp": {
-						{HostIP: "127.0.0.1", HostPort: "953"},
-					},
-				},
-			*/
 		}, func(config *docker.HostConfig) {
 			// set AutoRemove to true so that stopped container goes away by itself
 			config.AutoRemove = true
