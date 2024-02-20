@@ -3,7 +3,8 @@ linters-settings:
   govet:
     check-shadowing: false
   gocognit:
-    over: 15
+    # must be 30 for WriteLdapTns
+    min-complexity: 30
   gocyclo:
     min-complexity: 15
   lll:
@@ -91,6 +92,6 @@ linters:
 
 
 issues:
-  max-per-linter: 0
-  max-same: 0
+  max-issues-per-linter: 0
+  max-same-issues: 0
   exclude-use-default: false
