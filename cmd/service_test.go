@@ -14,14 +14,14 @@ import (
 )
 
 const DBUSER = "system"
-const DBPASSWORD = "XE-manager21"
+const DBPASSWORD = "FREE-manager21"
 const TIMEOUT = 5
 
 var dbhost = common.GetEnv("DB_HOST", "127.0.0.1")
-var xetest = fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))", dbhost, port)
+var xetest = fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=FREEPDB1)))", dbhost, DBPort)
 var target string
 
-const xealias = "XE.local"
+const xealias = "FREE.local"
 
 func TestOracleConnect(t *testing.T) {
 	if os.Getenv("SKIP_ORACLE") != "" {
@@ -129,7 +129,7 @@ func TestOracleConnect(t *testing.T) {
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.Errorf(t, err, "Check should fail")
-		assert.Contains(t, out, "Error: xealias dummy not found", "Expected Message not found")
+		assert.Contains(t, out, "Error: alias dummy not found", "Expected Message not found")
 	})
 	t.Run("CMD DBHOST Query", func(t *testing.T) {
 		out := ""
@@ -153,7 +153,7 @@ func TestOracleConnect(t *testing.T) {
 		expect = "Query returned"
 		assert.Contains(t, out, expect, "Expected Query Message not found")
 	})
-	t.Run("CMD XE Port Info", func(t *testing.T) {
+	t.Run("CMD FREE Port Info", func(t *testing.T) {
 		out := ""
 		args := []string{
 			"service",

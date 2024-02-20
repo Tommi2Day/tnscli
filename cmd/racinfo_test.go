@@ -20,7 +20,7 @@ import (
 const racaddr = "myrac.rac.lan"
 const racalias = "MYRAC"
 
-var racora = fmt.Sprintf("MYRAC.local=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=RACPDB1)))", racaddr, port)
+var racora = fmt.Sprintf("MYRAC.local=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=RACPDB1)))", racaddr, DBPort)
 
 const racinfoini = `
 [MYRAC.RAC.LAN]
@@ -79,14 +79,14 @@ func TestRACInfo(t *testing.T) {
 		assert.Equal(t, 0, len(addr), "Count not expected")
 		t.Logf("Addresses: %v", addr)
 	})
-	t.Run("CMD XE Port info IP Addr", func(t *testing.T) {
+	t.Run("CMD FREE Port info IP Addr", func(t *testing.T) {
 		out := ""
 		args := []string{
 			"service",
 			"info",
 			"ports",
 			"--filename", connectfilename,
-			"--service", "XE.local",
+			"--service", "FREE.local",
 			"--info",
 			"--nodns",
 			"--unit-test",
@@ -94,7 +94,7 @@ func TestRACInfo(t *testing.T) {
 		out, err = common.CmdRun(RootCmd, args)
 		t.Logf(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := fmt.Sprintf("Alias XE.local uses %d addresses", 1)
+		expect := fmt.Sprintf("Alias FREE.local uses %d addresses", 1)
 		assert.Contains(t, out, expect, "Expected Message not found")
 	})
 	t.Run("CMD Port info", func(t *testing.T) {

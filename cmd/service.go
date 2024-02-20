@@ -149,7 +149,6 @@ func getEntry(tnsKey string) (entry dblib.TNSEntry, err error) {
 }
 
 func portInfo(_ *cobra.Command, args []string) (err error) {
-	var allservices dblib.ServiceEntries
 	if len(args) > 0 {
 		tnsKey = args[0]
 	}
@@ -161,41 +160,46 @@ func portInfo(_ *cobra.Command, args []string) (err error) {
 		racinfo = path.Join(viper.GetString("tns_admin"), racinfoFile)
 	}
 	entry, err := getEntry(tnsKey)
-	if err == nil {
-		servers := entry.Servers
-		l := len(servers)
-		if l == 0 {
-			err = fmt.Errorf("xealias %s: No hosts found", tnsKey)
-			return
-		}
-		log.Infof("Alias %s uses %d hosts", tnsKey, l)
-		dblib.IgnoreDNSLookup = nodns
-		dblib.IPv4Only = ipv4
-		ns, p, e := common.GetHostPort(nameserver)
-		if e != nil {
-			ns = nameserver
-			p = 0
-		}
-		dblib.Resolver = dblib.SetResolver(ns, p, dnstcp)
-		for _, s := range servers {
-			host := s.Host
-			port := s.Port
-			services := dblib.GetRacAdresses(host, racinfo)
-			if len(services) == 0 {
-				log.Debugf("no racinfo found, will use original entry %s:%s", host, port)
-				services = append(services, dblib.ServiceEntryType{Host: host, Port: port, Address: host + ":" + port})
-			}
-			allservices = append(allservices, services...)
-		}
-		log.Infof("Alias %s uses %d addresses", tnsKey, len(allservices))
-		for _, s := range allservices {
-			if tcpcheck {
-				doTCPPing(s.Host, s.Address)
-			} else {
-				fmt.Printf("%s (%s)\n", s.Host, s.Address)
-			}
-		}
+	if err != nil {
 		return
+	}
+	servers := entry.Servers
+	l := len(servers)
+	if l == 0 {
+		err = fmt.Errorf("xealias %s: No hosts found", tnsKey)
+		return
+	}
+	log.Infof("Alias %s uses %d hosts", tnsKey, l)
+	dblib.IgnoreDNSLookup = nodns
+	dblib.IPv4Only = ipv4
+	ns, p, e := common.GetHostPort(nameserver)
+	if e != nil {
+		ns = nameserver
+		p = 0
+	}
+	dblib.Resolver = dblib.SetResolver(ns, p, dnstcp)
+	allservices := getServices(servers)
+	log.Infof("Alias %s uses %d addresses", tnsKey, len(allservices))
+	for _, s := range allservices {
+		if tcpcheck {
+			doTCPPing(s.Host, s.Address)
+		} else {
+			fmt.Printf("%s (%s)\n", s.Host, s.Address)
+		}
+	}
+	return
+}
+
+func getServices(servers []dblib.TNSAddress) (allservices dblib.ServiceEntries) {
+	for _, s := range servers {
+		host := s.Host
+		port := s.Port
+		services := dblib.GetRacAdresses(host, racinfo)
+		if len(services) == 0 {
+			log.Debugf("no racinfo found, will use original entry %s:%s", host, port)
+			services = append(services, dblib.ServiceEntryType{Host: host, Port: port, Address: host + ":" + port})
+		}
+		allservices = append(allservices, services...)
 	}
 	return
 }
@@ -365,40 +369,39 @@ func singleCheck(args []string, tnsEntries dblib.TNSEntries, domain string) (err
 		err = fmt.Errorf("dont have a service to check, use --service to provide")
 		return
 	}
-	log.Debugf("enter check for service %s ", tnsKey)
-
+	log.Debugf("get Entry for service %s ", tnsKey)
 	if entry, found := dblib.GetEntry(tnsKey, tnsEntries, domain); found {
-		desc := entry.Desc
-		location := entry.Location
-		tnsAlias := entry.Name
-		con := ""
-		log.Debugf("connect service %s from %s, timeout: %d s", tnsAlias, location, timeout)
-		log.Infof("use entry \n%s=%s\n", tnsAlias, strings.ReplaceAll(desc, "\r", " "))
-		ok, elapsed, hostval, errmsg := CheckWithOracle(dbUser, dbPass, desc, timeout)
-		if len(dbUser) > 0 {
-			con = fmt.Sprintf("using user '%s'", dbUser)
-		}
-		hv := ""
-		if ok {
-			if dbhostFlag && hostval == "" {
-				err = fmt.Errorf("database is available, but couldnt extract host info from database for xealias %s, maybe login failed", tnsKey)
-				return
-			}
-			if hostval != "" {
-				hv = "(" + hostval + ") "
-			}
-			log.Infof("service %s connected %s%s in %s\n", tnsKey, hv, con, elapsed.Round(time.Millisecond))
-			if dbhostFlag {
-				fmt.Printf("%s -> %s\n", tnsKey, hostval)
-			} else {
-				fmt.Printf("OK, service %s reachable\n", tnsAlias)
-			}
-		} else {
-			err = fmt.Errorf("service %s %s NOT reached:%s", tnsAlias, con, errmsg)
-		}
+		err = testService(entry)
 		return
 	}
-	err = fmt.Errorf("xealias %s not found", tnsKey)
+	err = fmt.Errorf("alias %s not found", tnsKey)
+	return
+}
+func testService(entry dblib.TNSEntry) (err error) {
+	desc := entry.Desc
+	location := entry.Location
+	tnsAlias := entry.Name
+	log.Debugf("connect service %s from %s, timeout: %d s", tnsAlias, location, timeout)
+	log.Infof("use entry \n%s=%s\n", tnsAlias, strings.ReplaceAll(desc, "\r", " "))
+	con := ""
+	if len(dbUser) > 0 {
+		con = fmt.Sprintf("using user '%s'", dbUser)
+	}
+	ok, elapsed, hostval, errmsg := CheckWithOracle(dbUser, dbPass, desc, timeout)
+	if ok {
+		hv := ""
+		if hostval != "" {
+			hv = "(" + hostval + ") "
+		}
+		log.Infof("service %s connected %s%s in %s\n", tnsKey, hv, con, elapsed.Round(time.Millisecond))
+		if dbhostFlag {
+			fmt.Printf("%s -> %s\n", tnsKey, hostval)
+		} else {
+			fmt.Printf("OK, service %s reachable\n", tnsAlias)
+		}
+	} else {
+		err = fmt.Errorf("service %s %s NOT reached:%s", tnsAlias, con, errmsg)
+	}
 	return
 }
 
