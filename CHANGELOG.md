@@ -1,12 +1,21 @@
 # Changelog tnscli
 
-## [v3.8.3 - 2024-02-19]
+## [v3.9.0 - 2024-02-20]
+### New
+- use now bitnami/openldap:2.6.7 as ldap test container
+- add ldap bind password prompt
+- Read Bind credentials also from LDAP_BIND_DN and *_PASSWORD environment variables
 ### Changed
 - update gomodules to v1.11.4
+- move docker provision to test folder
 - update dependencies
-- remove tools.go
+- update pipeline
+- use Oracle-Free 23.3 as test container, which causes to replace XE* with FREE*
+- update dblib to v1.6.5
+- remove tools.go and rely on preloaded tools in golang image
 ### Fixed
 - fix goreleaser version
+
 
 ## [v3.8.2 - 2023-10-31]
 ### New
