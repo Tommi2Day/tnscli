@@ -1,5 +1,9 @@
 # Changelog tnscli
 
+## [v3.9.1 - 2024-02-27]
+### New
+- add scripts and docs to packages
+
 ## [v3.9.0 - 2024-02-20]
 ### New
 - use now bitnami/openldap:2.6.7 as ldap test container

@@ -54,6 +54,10 @@ archives:
       - goos: windows
         format: zip
     strip_parent_binary_folder: true
+    files:
+      - "*.md"
+      - LICENSE
+      - scripts/*
 
 nfpms:
   - id: packages
@@ -72,8 +76,13 @@ nfpms:
       # dont use {{ .ProjectName }} here :(
       - tnscli
     contents:
+      - src: "*.md"
+        dst: /usr/share/doc/{{ .ProjectName }}/
+      - src: LICENSE
+        dst: /usr/share/doc/{{ .ProjectName }}/
       - src: scripts/*
-        dst: /usr/local/bin
+        dst: /usr/bin
+
 
 release:
   github:
