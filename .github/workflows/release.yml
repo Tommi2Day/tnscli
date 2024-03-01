@@ -31,5 +31,6 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --clean
+          cache: false
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_TOKEN }}
