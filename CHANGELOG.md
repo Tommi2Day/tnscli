@@ -1,5 +1,10 @@
 # Changelog tnscli
 
+## [v3.9.2 - 2024-04-02]
+### Changed
+- update gomodules to v1.12.1
+- update dependencies
+
 ## [v3.9.1 - 2024-02-27]
 ### New
 - add scripts and docs to packages
