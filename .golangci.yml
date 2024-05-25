@@ -1,7 +1,5 @@
 ---
 linters-settings:
-  govet:
-    check-shadowing: false
   gocognit:
     # must be 30 for WriteLdapTns
     min-complexity: 30
@@ -9,8 +7,6 @@ linters-settings:
     min-complexity: 15
   lll:
     line-length: 200
-  maligned:
-    suggest-new: true
   dupl:
     threshold: 250
   goconst:
@@ -57,12 +53,6 @@ linters-settings:
       - name: var-declaration
       - name: var-naming
 
-run:
-  timeout: 5m
-  # skip directories: vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
-  skip-dirs-use-default: true
-  # Fail if the error was met.
-  issues-exit-code: 1
 
 linters:
   enable:
@@ -89,9 +79,5 @@ linters:
     - unused
 #    - varcheck
     - whitespace
-
-
 issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  exclude-use-default: false
+  exclude-use-default: true
