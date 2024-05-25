@@ -1,5 +1,11 @@
 # Changelog tnscli
 
+## [v3.9.3 - 2024-05-25]
+### Changed
+- use Go1.22
+- use netlib instead of dblib fpr ping check
+- update dependencies and linter
+
 ## [v3.9.2 - 2024-04-02]
 ### Changed
 - update gomodules to v1.12.1

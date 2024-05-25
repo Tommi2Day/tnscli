@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tommi2day/gomodules/netlib"
+
 	"github.com/tommi2day/gomodules/common"
 
 	"github.com/tommi2day/tnscli/test"
@@ -56,11 +58,13 @@ func TestRACInfo(t *testing.T) {
 	require.NotNil(t, dnsContainer, "Prepare failed")
 	defer destroyDNSContainer(dnsContainer)
 	// use DNS from Docker
-	dblib.Resolver = dblib.SetResolver(dnsserver, dnsport, true)
-	dblib.NameserverTimeout = 8 * time.Second
+	dns := netlib.NewResolver(dnsserver, dnsport, true)
+	dns.Timeout = 8 * time.Second
 	t.Run("Test RacInfo.ini resolution", func(t *testing.T) {
+		dns.IPv4Only = true
 		dblib.IgnoreDNSLookup = false
 		dblib.IPv4Only = true
+		dblib.DNSConfig = dns
 		addr := dblib.GetRacAdresses(racaddr, path.Join(tnsAdminDir, racinfoFile))
 		assert.Equal(t, 6, len(addr), "Count not expected")
 		t.Logf("Addresses: %v", addr)

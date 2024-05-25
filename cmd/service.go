@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tommi2day/gomodules/netlib"
+
 	"github.com/spf13/viper"
 
 	goora "github.com/sijms/go-ora/v2"
@@ -72,7 +74,7 @@ var (
 )
 
 const defaultUser = "C##TCHECK"
-const defaultPassword = "<MyCheckPassword>"
+const defaultPassword = "C0nnectMe!now"
 const racinfoFile = "racinfo.ini"
 
 var dbUser = ""
@@ -177,8 +179,8 @@ func portInfo(_ *cobra.Command, args []string) (err error) {
 		ns = nameserver
 		p = 0
 	}
-	dblib.Resolver = dblib.SetResolver(ns, p, dnstcp)
-	allservices := getServices(servers)
+	dns := netlib.NewResolver(ns, p, dnstcp)
+	allservices := getServices(dns, servers)
 	log.Infof("Alias %s uses %d addresses", tnsKey, len(allservices))
 	for _, s := range allservices {
 		if tcpcheck {
@@ -190,10 +192,11 @@ func portInfo(_ *cobra.Command, args []string) (err error) {
 	return
 }
 
-func getServices(servers []dblib.TNSAddress) (allservices dblib.ServiceEntries) {
+func getServices(dns *netlib.DNSconfig, servers []dblib.TNSAddress) (allservices dblib.ServiceEntries) {
 	for _, s := range servers {
 		host := s.Host
 		port := s.Port
+		dblib.DNSConfig = dns
 		services := dblib.GetRacAdresses(host, racinfo)
 		if len(services) == 0 {
 			log.Debugf("no racinfo found, will use original entry %s:%s", host, port)

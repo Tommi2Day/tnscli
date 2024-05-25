@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
@@ -10,7 +9,7 @@ import (
 	"github.com/tommi2day/tnscli/test"
 
 	"github.com/tommi2day/gomodules/common"
-	"github.com/tommi2day/gomodules/dblib"
+	"github.com/tommi2day/gomodules/netlib"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -128,8 +127,8 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 	elapsed := time.Since(start)
 	fmt.Printf("DNS Container is available after %s\n", elapsed.Round(time.Millisecond))
 	// test dns
-	r := dblib.SetResolver(dnsserver, dnsport, true)
-	ips, e := r.LookupHost(context.Background(), racaddr)
+	dns := netlib.NewResolver(dnsserver, dnsport, true)
+	ips, e := dns.LookupIP(racaddr)
 	if e != nil || len(ips) == 0 {
 		fmt.Printf("Could not resolve DNS with %s: %v", racaddr, e)
 		return

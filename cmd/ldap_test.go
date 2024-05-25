@@ -35,7 +35,7 @@ const LdapAdminUser = "cn=admin," + LdapBaseDn
 const LdapAdminPassword = "admin"
 const LdapConfigPassword = "config"
 
-const ldaptns = ` 
+const ldaptns = `
 XE.local =(DESCRIPTION =
 (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
 (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE))
