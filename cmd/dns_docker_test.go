@@ -6,12 +6,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/ory/dockertest/v3"
+
 	"github.com/tommi2day/tnscli/test"
 
 	"github.com/tommi2day/gomodules/common"
 	"github.com/tommi2day/gomodules/netlib"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 )
 
@@ -49,8 +50,8 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 			options.IPAM = &docker.IPAMOptions{
 				Driver: "default",
 				Config: []docker.IPAMConfig{{
-					Subnet:  "172.24.0.0/16",
-					Gateway: "172.24.0.1",
+					Subnet:  "172.25.1.0/24",
+					Gateway: "172.25.1.1",
 				}},
 			}
 			options.EnableIPv6 = false
@@ -101,7 +102,7 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 	}
 	// ip := container.Container.NetworkSettings.Networks[networkName].IPAddress
 	ip := container.GetIPInNetwork(dnsnetwork)
-	if ip != "172.24.0.2" {
+	if ip != "172.25.1.2" {
 		err = fmt.Errorf("internal ip not as expected: %s", ip)
 		return
 	}
