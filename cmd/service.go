@@ -258,7 +258,7 @@ func getTnsInfo(_ *cobra.Command, args []string) (err error) {
 		desc = strings.ReplaceAll(desc, "(ADDRESS_LIST", "  (ADDRESS_LIST")
 		desc = strings.ReplaceAll(desc, "(CONNECT_DATA", "  (CONNECT_DATA")
 		out := fmt.Sprintf("# Location: %s \n%s=  %s", loc, tnsAlias, desc)
-		log.Infof(out)
+		log.Info(out)
 		fmt.Println(out)
 	}
 	return
@@ -280,7 +280,7 @@ func getJdbcInfo(_ *cobra.Command, args []string) (err error) {
 		dblib.ModifyJDBCTransportConnectTimeout = false
 	}
 	out, err = dblib.GetJDBCUrl(desc)
-	log.Infof(out)
+	log.Info(out)
 	fmt.Println(out)
 
 	return

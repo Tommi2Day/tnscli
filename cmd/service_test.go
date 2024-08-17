@@ -75,7 +75,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("service %s connected", xealias)
 		assert.Contains(t, out, expect, "Expected Message not found")
@@ -92,7 +92,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.Errorf(t, err, "Check should fail")
 		expect := "2 entries checked, 1 ok, 1 failed"
 		assert.Contains(t, out, expect, "Expected Message not found")
@@ -112,7 +112,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("service %s connected", xealias)
 		assert.Contains(t, out, expect, "Expected Message not found")
@@ -127,7 +127,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.Errorf(t, err, "Check should fail")
 		assert.Contains(t, out, "Error: alias dummy not found", "Expected Message not found")
 	})
@@ -146,7 +146,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("service %s connected", xealias)
 		assert.Contains(t, out, expect, "Expected connect Message not found")
@@ -166,7 +166,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("Alias %s uses", xealias)
 		assert.Contains(t, out, expect, "Expected Message not found")
@@ -185,7 +185,7 @@ func TestOracleConnect(t *testing.T) {
 				"--unit-test",
 			}
 			out, err = common.CmdRun(RootCmd, args)
-			t.Logf(out)
+			t.Log(out)
 			assert.NoErrorf(t, err, "Check should succeed")
 			expect := jdbcprefix + xetest
 			assert.Contains(t, out, expect, "Expected Message not found")
@@ -203,7 +203,7 @@ func TestOracleConnect(t *testing.T) {
 				"--unit-test",
 			}
 			out, err = common.CmdRun(RootCmd, args)
-			t.Logf(out)
+			t.Log(out)
 			assert.NoErrorf(t, err, "Check should succeed")
 			expect := jdbcprefix + totest
 			expect = strings.ReplaceAll(expect, "TIMEOUT=3)", "TIMEOUT=3000)")
@@ -222,7 +222,7 @@ func TestOracleConnect(t *testing.T) {
 				"--unit-test",
 			}
 			out, err = common.CmdRun(RootCmd, args)
-			t.Logf(out)
+			t.Log(out)
 			assert.NoErrorf(t, err, "Check should succeed")
 			expect := jdbcprefix + totest
 			assert.Contains(t, out, expect, "Expected Message not found")
@@ -240,7 +240,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := strings.ToUpper(xealias)
 		assert.Contains(t, strings.ToUpper(out), expect, "Expected Message '%s' not found", expect)
@@ -258,7 +258,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := dbhost
 		assert.Contains(t, out, expect, "Expected Message not found")
@@ -276,7 +276,7 @@ func TestOracleConnect(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		assert.Contains(t, out, "PROBLEM", "Port result should be PROBLEM")
 	})

@@ -1,5 +1,13 @@
 # Changelog tnscli
 
+## [v3.9.4 - 2024-08-17]
+### Changed
+- update dependencies
+### Fixed
+- overlapping docker network subnet
+- fix new linter issues
+
+
 ## [v3.9.3 - 2024-05-25]
 ### Changed
 - use Go1.22

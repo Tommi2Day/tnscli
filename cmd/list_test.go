@@ -230,6 +230,6 @@ func TestParseTns(t *testing.T) {
 		assert.NoErrorf(t, err, "List command should not return an error:%s", err)
 		assert.NotEmpty(t, out, "List should not empty")
 		assert.Contains(t, out, "found 1 ", "Output should state one entry")
-		t.Logf(out)
+		t.Log(out)
 	})
 }

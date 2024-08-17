@@ -229,7 +229,7 @@ func TestOracleLdap(t *testing.T) {
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error: %s", err)
-		t.Logf(out)
+		t.Log(out)
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")
 	})
 
@@ -250,7 +250,7 @@ func TestOracleLdap(t *testing.T) {
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error:%s", err)
-		t.Logf(out)
+		t.Log(out)
 		assert.FileExistsf(t, filename, "Output File not created")
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")
 	})
@@ -276,7 +276,7 @@ func TestOracleLdap(t *testing.T) {
 
 		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error:%s", err)
-		t.Logf(out)
+		t.Log(out)
 		assert.Containsf(t, out, "SUCCESS: ", "Output not as expected")
 		inputReader = os.Stdin
 		_ = w.Close()

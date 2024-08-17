@@ -96,7 +96,7 @@ func TestRACInfo(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("Alias FREE.local uses %d addresses", 1)
 		assert.Contains(t, out, expect, "Expected Message not found")
@@ -116,7 +116,7 @@ func TestRACInfo(t *testing.T) {
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)
-		t.Logf(out)
+		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
 		expect := fmt.Sprintf("Alias %s uses %d addresses", racalias, 6)
 		assert.Contains(t, out, expect, "Expected Message not found")
