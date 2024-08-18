@@ -17,7 +17,8 @@ import (
 )
 
 const DNScontainerTimeout = 10
-const networkName = "dblib-dnsnetwork"
+const tnscliNetworkName = "tnscli-dnsnetwork"
+const tnscliNetworkPrefix = "172.25.2"
 
 var dnscontainerName string
 var dnsContainer *dockertest.Resource
@@ -42,23 +43,23 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 		return
 	}
 
-	networks, err := pool.NetworksByName(networkName)
+	networks, err := pool.NetworksByName(tnscliNetworkName)
 	if err != nil || len(networks) == 0 {
-		dnsnetwork, err = pool.CreateNetwork(networkName, func(options *docker.CreateNetworkOptions) {
-			options.Name = networkName
+		dnsnetwork, err = pool.CreateNetwork(tnscliNetworkName, func(options *docker.CreateNetworkOptions) {
+			options.Name = tnscliNetworkName
 			options.CheckDuplicate = true
 			options.IPAM = &docker.IPAMOptions{
 				Driver: "default",
 				Config: []docker.IPAMConfig{{
-					Subnet:  "172.25.1.0/24",
-					Gateway: "172.25.1.1",
+					Subnet:  tnscliNetworkPrefix + ".0/24",
+					Gateway: tnscliNetworkPrefix + ".1",
 				}},
 			}
 			options.EnableIPv6 = false
 			// options.Internal = true
 		})
 		if err != nil {
-			err = fmt.Errorf("could not create Network: %s:%s", networkName, err)
+			err = fmt.Errorf("could not create Network: %s:%s", tnscliNetworkName, err)
 			return
 		}
 		networkCreated = true
@@ -100,9 +101,9 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 		err = fmt.Errorf("error starting dns docker container: %v", err)
 		return
 	}
-	// ip := container.Container.NetworkSettings.Networks[networkName].IPAddress
+	// ip := container.Container.NetworkSettings.Networks[tnscliNetworkName].IPAddress
 	ip := container.GetIPInNetwork(dnsnetwork)
-	if ip != "172.25.1.2" {
+	if ip != tnscliNetworkPrefix+".2" {
 		err = fmt.Errorf("internal ip not as expected: %s", ip)
 		return
 	}

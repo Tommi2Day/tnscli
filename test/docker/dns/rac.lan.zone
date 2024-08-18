@@ -10,14 +10,14 @@ $TTL    1d ; default expiration time (in seconds) of all RRs without their own T
      IN      NS      ns1.rac.lan.
 
 ; name servers - A records
-ns1.rac.lan.         IN      A      172.25.1.2
+ns1.rac.lan.         IN      A      172.25.2.2
 
-myrac.rac.lan.       IN      A      172.25.1.3
-myrac.rac.lan.       IN      A      172.25.1.4
-myrac.rac.lan.       IN      A      172.25.1.5
-vip1.rac.lan.        IN      A      172.25.1.13
-vip2.rac.lan.        IN      A      172.25.1.14
-vip3.rac.lan.        IN      A      172.25.1.15
+myrac.rac.lan.       IN      A      172.25.2.3
+myrac.rac.lan.       IN      A      172.25.2.4
+myrac.rac.lan.       IN      A      172.25.2.5
+vip1.rac.lan.        IN      A      172.25.2.13
+vip2.rac.lan.        IN      A      172.25.2.14
+vip3.rac.lan.        IN      A      172.25.2.15
 
 ; CNAME records
 
