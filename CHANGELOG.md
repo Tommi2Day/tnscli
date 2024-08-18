@@ -11,8 +11,10 @@
 ### Changed
 - change docker network range
 - rename testinit to testfunc
-- refactor testint
+- refactor testinit
 - update dependencies
+### Fixed
+- fix new linter issues
 
 ## [v3.9.3 - 2024-05-25]
 ### Changed
