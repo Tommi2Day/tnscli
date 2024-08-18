@@ -1,16 +1,10 @@
 # Changelog tnscli
 
-## [v3.9.4 - 2024-08-17]
-### Changed
-- update dependencies
-### Fixed
-- overlapping docker network subnet
-- fix new linter issues
 
 ## [v3.9.4 - 2024-08-18]
 ### Changed
 - change docker network range
-- rename testinit to testfunc
+- replace os.WriteFile
 - refactor testinit
 - update dependencies
 ### Fixed

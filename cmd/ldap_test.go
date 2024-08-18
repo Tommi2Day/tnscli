@@ -89,8 +89,7 @@ func TestOracleLdap(t *testing.T) {
 	tnsSource1 := path.Join(tnsAdmin, "/ldap_file_write1.ora")
 	tnsSource2 := path.Join(tnsAdmin, "/ldap_file_write2.ora")
 
-	//nolint gosec
-	err = os.WriteFile(ldapAdmin+"/ldap.ora", []byte(ldapora), 0644)
+	err = common.WriteStringToFile(ldapAdmin+"/ldap.ora", ldapora)
 	require.NoErrorf(t, err, "Create test ldap.ora failed")
 
 	// prepare or skip container based tests
@@ -103,13 +102,9 @@ func TestOracleLdap(t *testing.T) {
 	defer common.DestroyDockerContainer(ldapContainer)
 	server, port = common.GetContainerHostAndPort(ldapContainer, "1389/tcp")
 	// create test file to load
-
-	//nolint gosec
-	err = os.WriteFile(tnsSource1, []byte(ldaptns), 0644)
+	err = common.WriteStringToFile(tnsSource1, ldaptns)
 	require.NoErrorf(t, err, "Create test %s failed", tnsSource1)
-
-	//nolint gosec
-	err = os.WriteFile(tnsSource2, []byte(ldaptns2), 0644)
+	err = common.WriteStringToFile(tnsSource2, ldaptns2)
 	require.NoErrorf(t, err, "Create test %s failed", tnsSource2)
 
 	t.Run("Ldap Config with ldap.ora", func(t *testing.T) {

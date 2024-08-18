@@ -97,14 +97,11 @@ func TestParseTns(t *testing.T) {
 	err = os.Chdir(test.TestDir)
 	require.NoErrorf(t, err, "ChDir failed")
 
-	//nolint gosec
-	err = os.WriteFile(path.Join(tnsAdminDir, sqlnetFile), []byte(sqlnetora), 0644)
+	err = common.WriteStringToFile(path.Join(tnsAdminDir, sqlnetFile), sqlnetora)
 	require.NoErrorf(t, err, "Create test sqlnet.ora failed")
-	//nolint gosec
-	err = os.WriteFile(path.Join(tnsAdminDir, tnsFile), []byte(tnsnamesora), 0644)
+	err = common.WriteStringToFile(path.Join(tnsAdminDir, tnsFile), tnsnamesora)
 	require.NoErrorf(t, err, "Create test tnsnames.ora failed")
-	//nolint gosec
-	err = os.WriteFile(path.Join(tnsAdminDir, "ifile.ora"), []byte(ifileora), 0644)
+	err = common.WriteStringToFile(path.Join(tnsAdminDir, "ifile.ora"), ifileora)
 	require.NoErrorf(t, err, "Create test ifile.ora failed")
 
 	filename = path.Join(tnsAdminDir, tnsFile)
