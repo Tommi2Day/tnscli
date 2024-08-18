@@ -92,7 +92,7 @@ const sqlnetFile = "sqlnet.ora"
 
 func TestParseTns(t *testing.T) {
 	var err error
-	test.Testinit(t)
+	test.InitTestDirs()
 	//nolint gosec
 	err = os.Chdir(test.TestDir)
 	require.NoErrorf(t, err, "ChDir failed")

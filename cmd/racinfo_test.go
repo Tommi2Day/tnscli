@@ -34,22 +34,18 @@ vip3=vip3.rac.lan:1521
 
 func TestRACInfo(t *testing.T) {
 	var err error
-	// t.Skip()
-
-	test.Testinit(t)
+	test.InitTestDirs()
 	err = os.Chdir(test.TestDir)
 	require.NoErrorf(t, err, "ChDir failed")
 
-	//nolint gosec
-	err = os.WriteFile(tnsAdminDir+"/racinfo.ini", []byte(racinfoini), 0644)
+	err = common.WriteStringToFile(tnsAdminDir+"/racinfo.ini", racinfoini)
 	require.NoErrorf(t, err, "Create test racinfo.ini failed")
 	racfilename := tnsAdminDir + "/rac.ora"
-	//nolint gosec
-	err = os.WriteFile(racfilename, []byte(racora), 0644)
+
+	err = common.WriteStringToFile(racfilename, racora)
 	require.NoErrorf(t, err, "Create test rac.ora failed")
 	connectfilename := tnsAdminDir + "/connect2.ora"
-	//nolint gosec
-	_ = os.WriteFile(connectfilename, []byte(xealias+"="+xetest), 0644)
+	_ = common.WriteStringToFile(connectfilename, xealias+"="+xetest)
 	if os.Getenv("SKIP_DNS") != "" {
 		t.Skip("Skipping DNS testing in CI environment")
 	}

@@ -7,6 +7,12 @@
 - overlapping docker network subnet
 - fix new linter issues
 
+## [v3.9.4 - 2024-08-18]
+### Changed
+- change docker network range
+- rename testinit to testfunc
+- refactor testint
+- update dependencies
 
 ## [v3.9.3 - 2024-05-25]
 ### Changed

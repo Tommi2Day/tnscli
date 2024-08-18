@@ -31,13 +31,11 @@ func TestOracleConnect(t *testing.T) {
 	const toalias = "TOTEST.local"
 	const totest = "(DESCRIPTION=((TRANSPORT_CONNECT_TIMEOUT=3)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=totest)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=totest.local)))"
 	tnsFilename := tnsAdminDir + "/connect.ora"
-
-	//nolint gosec
-	_ = os.WriteFile(tnsFilename, []byte(xealias+"="+xetest+"\n\n"+toalias+"="+totest), 0644)
-
+	_ = common.WriteStringToFile(tnsFilename, xealias+"="+xetest+"\n\n"+toalias+"="+totest)
 	t.Logf("load from %s", tnsFilename)
 	tnsEntries, domain, err := dblib.GetTnsnames(tnsFilename, true)
 	t.Logf("Default Domain: '%s'", domain)
+
 	t.Run("Parse TNSNames.ora", func(t *testing.T) {
 		require.NoErrorf(t, err, "Parsing %s failed: %s", tnsFilename, err)
 	})
