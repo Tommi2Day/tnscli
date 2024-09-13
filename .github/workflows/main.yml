@@ -12,9 +12,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      dind:
-        image: docker:dind-rootless
-        alias: docker
+      docker:
+        image: docker:dind
+        options: --privileged
         ports:
           - 2375:2375
     steps:
@@ -33,7 +33,7 @@ jobs:
           # github copies the files with api, not as clone, check fails
           # https://github.com/actions/checkout/issues/335
           SKIP_COMMIT: true
-          DNS_HOST: "docker"
+          DNS_HOST: docker
         run: go test -v ./...  -coverprofile=coverage.txt -covermode=atomic
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
