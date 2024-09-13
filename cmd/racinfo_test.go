@@ -22,7 +22,7 @@ import (
 const racaddr = "myrac.rac.lan"
 const racalias = "MYRAC"
 
-var racora = fmt.Sprintf("MYRAC.local=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=RACPDB1)))", racaddr, DBPort)
+var racora = fmt.Sprintf("MYRAC.local=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=RACPDB1)))", racaddr, dbPort)
 
 const racinfoini = `
 [MYRAC.RAC.LAN]
@@ -49,12 +49,12 @@ func TestRACInfo(t *testing.T) {
 	if os.Getenv("SKIP_DNS") != "" {
 		t.Skip("Skipping DNS testing in CI environment")
 	}
-	dnsContainer, err = prepareDNSContainer()
+	tnscliDNSContainer, err = prepareDNSContainer()
 	require.NoErrorf(t, err, "DNS Server not available")
-	require.NotNil(t, dnsContainer, "Prepare failed")
-	defer destroyDNSContainer(dnsContainer)
+	require.NotNil(t, tnscliDNSContainer, "Prepare failed")
+	defer destroyDNSContainer(tnscliDNSContainer)
 	// use DNS from Docker
-	dns := netlib.NewResolver(dnsserver, dnsport, true)
+	dns := netlib.NewResolver(tnscliDNSServer, tnscliDNSPort, true)
 	dns.Timeout = 8 * time.Second
 	t.Run("Test RacInfo.ini resolution", func(t *testing.T) {
 		dns.IPv4Only = true
@@ -106,7 +106,7 @@ func TestRACInfo(t *testing.T) {
 			"--filename", racfilename,
 			"--service", racalias,
 			"--info",
-			"--nameserver", fmt.Sprintf("%s:%d", dnsserver, dnsport),
+			"--nameserver", fmt.Sprintf("%s:%d", tnscliDNSServer, tnscliDNSPort),
 			"--dnstcp",
 			"--nodns=false",
 			"--unit-test",

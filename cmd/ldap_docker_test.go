@@ -14,25 +14,25 @@ import (
 )
 
 const Ldaprepo = "docker.io/bitnami/openldap"
-const LdaprepoTag = "2.6.7"
+const LdaprepoTag = "2.6.8"
 const LdapcontainerTimeout = 120
 
-var LdapcontainerName string
-var ldapContainer *dockertest.Resource
+var TnsLdapcontainerName string
+var TnsLdapContainer *dockertest.Resource
 
 // prepareContainer create an OpenLdap Docker Container
-func prepareLdapContainer() (container *dockertest.Resource, err error) {
+func prepareTnsLdapContainer() (container *dockertest.Resource, err error) {
 	if os.Getenv("SKIP_LDAP") != "" {
 		err = fmt.Errorf("skipping LDAP Container in CI environment")
 		return
 	}
-	LdapcontainerName = os.Getenv("LDAP_CONTAINER_NAME")
-	if LdapcontainerName == "" {
-		LdapcontainerName = "tnscli-ldap"
+	TnsLdapcontainerName = os.Getenv("LDAP_CONTAINER_NAME")
+	if TnsLdapcontainerName == "" {
+		TnsLdapcontainerName = "tnscli-ldap"
 	}
 	var pool *dockertest.Pool
 	pool, err = common.GetDockerPool()
-	if err != nil {
+	if err != nil || pool == nil {
 		return
 	}
 	vendorImagePrefix := os.Getenv("VENDOR_IMAGE_PREFIX")
@@ -59,19 +59,19 @@ func prepareLdapContainer() (container *dockertest.Resource, err error) {
 			"LDAP_ALLOW_ANON_BINDING=yes",
 		},
 		Mounts: []string{
-			test.TestDir + "/docker/oracle-ldap/ldif:/bootstrap/ldif:ro",
 			test.TestDir + "/docker/oracle-ldap/schema:/bootstrap/schema:ro",
 			test.TestDir + "/docker/oracle-ldap/entrypoint:/docker-entrypoint-initdb.d",
+			test.TestDir + "/docker/oracle-ldap/ldif:/bootstrap/ldif:ro",
 		},
-		Hostname: LdapcontainerName,
-		Name:     LdapcontainerName,
+		Hostname: TnsLdapcontainerName,
+		Name:     TnsLdapcontainerName,
 	}, func(config *docker.HostConfig) {
 		// set AutoRemove to true so that stopped container goes away by itself
 		config.AutoRemove = true
 		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
 	})
 
-	if err != nil {
+	if err != nil || container == nil {
 		err = fmt.Errorf("error starting ldap docker container: %v", err)
 		return
 	}

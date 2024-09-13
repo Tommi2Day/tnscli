@@ -13,13 +13,7 @@ import (
 	"github.com/tommi2day/gomodules/dblib"
 )
 
-const DBUSER = "system"
-const DBPASSWORD = "FREE-manager21"
-const TIMEOUT = 5
-
-var dbhost = common.GetEnv("DB_HOST", "127.0.0.1")
-var xetest = fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=FREEPDB1)))", dbhost, DBPort)
-var target string
+var xetest = fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=FREEPDB1)))", dbHost, dbPort)
 
 const xealias = "FREE.local"
 
@@ -103,9 +97,9 @@ func TestOracleConnect(t *testing.T) {
 			"check",
 			"--filename", tnsFilename,
 			"--service", xealias,
-			"--user", DBUSER,
-			"--password", DBPASSWORD,
-			"--timeout", fmt.Sprintf("%d", TIMEOUT),
+			"--user", dbSystemUser,
+			"--password", dbPassword,
+			"--timeout", fmt.Sprintf("%d", dbTimeout),
 			"--info",
 			"--unit-test",
 		}
@@ -137,9 +131,9 @@ func TestOracleConnect(t *testing.T) {
 			"--filename", tnsFilename,
 			"--service", xealias,
 			"--dbhost",
-			"--user", DBUSER,
-			"--password", DBPASSWORD,
-			"--timeout", fmt.Sprintf("%d", TIMEOUT),
+			"--user", dbSystemUser,
+			"--password", dbPassword,
+			"--timeout", fmt.Sprintf("%d", dbTimeout),
 			"--info",
 			"--unit-test",
 		}
@@ -258,7 +252,7 @@ func TestOracleConnect(t *testing.T) {
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		expect := dbhost
+		expect := dbHost
 		assert.Contains(t, out, expect, "Expected Message not found")
 		assert.Contains(t, out, "OPEN", "Port should be open")
 	})

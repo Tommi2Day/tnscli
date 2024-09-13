@@ -13,19 +13,24 @@ import (
 	"github.com/tommi2day/gomodules/common"
 )
 
-// DBPort is the port of the Oracle DB to access (default:21521)
-const DBPort = "21521"
-const repo = "docker.io/gvenzl/oracle-free"
-const repoTag = "23.3-slim"
-const containerTimeout = 600
+const (
+	dbPort             = "21521"
+	dbRepo             = "docker.io/gvenzl/oracle-free"
+	dbRepoTag          = "23.5-slim"
+	dbContainerTimeout = 600
+	dbTimeout          = 5
 
-// SYSTEMUSER is the name of the default DBA user
-const SYSTEMUSER = "system"
+	//nolint gosec
+	dbPassword      = "XE-Manager23"
+	dbSystemUser    = "system"
+	dbSystemService = "FREE"
+)
 
-// SYSTEMSERVICE is the name of the root service
-const SYSTEMSERVICE = "FREE"
-
-var containerName string
+var (
+	dbContainerName string
+	dbHost          = common.GetEnv("DB_HOST", "127.0.0.1")
+	target          string
+)
 
 // prepareContainer create an Oracle Docker Container
 func prepareContainer() (container *dockertest.Resource, err error) {
@@ -33,34 +38,33 @@ func prepareContainer() (container *dockertest.Resource, err error) {
 		err = fmt.Errorf("skipping ORACLE Container in CI environment")
 		return
 	}
-	containerName = os.Getenv("CONTAINER_NAME")
-	if containerName == "" {
-		containerName = "tnscli-oracledb"
+	dbContainerName = os.Getenv("DB_CONTAINER_NAME")
+	if dbContainerName == "" {
+		dbContainerName = "tnscli-oracledb"
 	}
 	var pool *dockertest.Pool
 	pool, err = common.GetDockerPool()
 	if err != nil {
 		return
 	}
-
 	vendorImagePrefix := os.Getenv("VENDOR_IMAGE_PREFIX")
-	repoString := vendorImagePrefix + repo
+	repoString := vendorImagePrefix + dbRepo
 
-	fmt.Printf("Try to start docker container for %s:%s\n", repoString, repoTag)
+	fmt.Printf("Try to start docker container for %s:%s\n", repoString, dbRepoTag)
 	container, err = pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: repoString,
-		Tag:        repoTag,
+		Tag:        dbRepoTag,
 
-		Hostname: containerName,
-		Name:     containerName,
+		Hostname: dbContainerName,
+		Name:     dbContainerName,
 		Env: []string{
-			"ORACLE_PASSWORD=" + DBPASSWORD,
+			"ORACLE_PASSWORD=" + dbPassword,
 		},
 		ExposedPorts: []string{"1521"},
 		// need fixed mapping here
 		PortBindings: map[docker.Port][]docker.PortBinding{
 			"1521": {
-				{HostIP: "0.0.0.0", HostPort: DBPort},
+				{HostIP: "0.0.0.0", HostPort: dbPort},
 			},
 		},
 		Mounts: []string{
@@ -73,20 +77,17 @@ func prepareContainer() (container *dockertest.Resource, err error) {
 	})
 
 	if err != nil {
-		err = fmt.Errorf("error starting DB docker %s container: %v", containerName, err)
-		_ = pool.Purge(container)
+		err = fmt.Errorf("error starting DB docker %s container: %v", dbContainerName, err)
+		if container != nil {
+			_ = pool.Purge(container)
+		}
 		return
 	}
-
-	start := time.Now()
 	err = WaitForOracle(pool)
 	if err != nil {
 		_ = pool.Purge(container)
 		return
 	}
-	elapsed := time.Since(start)
-	fmt.Printf("DB Container is available after %s\n", elapsed.Round(time.Millisecond))
-	err = nil
 	return
 }
 
@@ -104,9 +105,9 @@ func WaitForOracle(pool *dockertest.Pool) (err error) {
 		}
 	}
 
-	pool.MaxWait = containerTimeout * time.Second
-	target = fmt.Sprintf("oracle://%s:%s@%s:%s/%s", SYSTEMUSER, DBPASSWORD, dbhost, DBPort, SYSTEMSERVICE)
-	fmt.Printf("Wait to successfully init db with %s (max %ds)...\n", target, containerTimeout)
+	pool.MaxWait = dbContainerTimeout * time.Second
+	target = fmt.Sprintf("oracle://%s:%s@%s:%s/%s", dbSystemUser, dbPassword, dbHost, dbPort, dbSystemService)
+	fmt.Printf("Wait to successfully init db with %s (max %ds)...\n", target, dbContainerTimeout)
 	start := time.Now()
 	if err = pool.Retry(func() error {
 		var err error

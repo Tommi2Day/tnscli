@@ -1,5 +1,9 @@
 # Changelog tnscli
 
+## [v3.9.5 - 2024-09-13]
+### Changed
+- refactor docker test images
+- update dependencies
 
 ## [v3.9.4 - 2024-08-18]
 ### Changed

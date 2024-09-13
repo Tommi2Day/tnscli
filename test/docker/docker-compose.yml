@@ -2,24 +2,26 @@ version: '3.8'
 name: tnslib
 services:
   oracle:
-    image: 'gvenzl/oracle-free:23.3-slim'
+    image: 'gvenzl/oracle-free:23.5-slim'
     restart: "no"
     environment:
-      - 'ORACLE_PASSWORD=FREE-Manager21'
+      - 'ORACLE_PASSWORD=FREE-Manager23'
     ports:
       - '21521:1521'
     volumes:
       - "./oracle-db:/container-entrypoint-initdb.d"
 
   ldap:
-    image: "${VENDOR_IMAGE_PREFIX}docker.io/bitnami/openldap:2.6.7"
+    image: "${VENDOR_IMAGE_PREFIX}docker.io/bitnami/openldap:2.6.8"
     restart: "no"
-    hostname: "ldap.oracle.local"
+    hostname: "ldap.example.local"
     ports:
-        - '2389:1389'
+      - '2389:1389'
+      - '2636:1636'
     volumes:
       - "./oracle-ldap/ldif:/bootstrap/ldif:ro"
       - "./oracle-ldap/schema:/bootstrap/schema:ro"
+      - "./oracle-ldap/certs:/opt/bitnami/openldap/certs:ro"
       - "./oracle-ldap/entrypoint:/docker-entrypoint-initdb.d"
     environment:
         - LDAP_PORT_NUMBER=1389
@@ -40,17 +42,15 @@ services:
   dns:
     image: "tnslib-dns:latest"
     build:
-      context: dns
-      dockerfile: dns/Dockerfile
+      context: oracle-dns
+      dockerfile: Dockerfile
       args:
         VENDOR_IMAGE_PREFIX: ${VENDOR_IMAGE_PREFIX}
-        BIND9_VERSION: "9.18"
+        BIND9_VERSION: "9.20"
     ports:
-      - '2053:53/tcp'
-      - '2053:53/udp'
-      - '2953:953/tcp'
+      - '9055:9055'
     restart: "no"
-    hostname: "dns.test.local"
+    hostname: "ns1.rac.lan"
     networks:
       - dns
       - default

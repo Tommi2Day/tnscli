@@ -1,5 +1,5 @@
 $TTL    1d ; default expiration time (in seconds) of all RRs without their own TTL value
-@       IN      SOA     ns1.rac.io. root.rac.lan. (
+@       IN      SOA     ns1.rac.lan. root.rac.lan. (
                   3      ; Serial
                   1d     ; Refresh
                   1h     ; Retry

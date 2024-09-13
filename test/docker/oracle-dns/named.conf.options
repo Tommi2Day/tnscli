@@ -1,7 +1,7 @@
 options {
     directory "/var/cache/bind";
     recursion yes;
-    listen-on { any; };
+    listen-on port 9055 { any; };
     forwarders {
         8.8.8.8;
         8.8.4.4;
