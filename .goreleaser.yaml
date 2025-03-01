@@ -43,10 +43,10 @@ snapshot:
 
 archives:
   - id: archive
-    format: tar.gz
+    formats: tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats: zip
     strip_binary_directory: true
     files:
       - "*.md"

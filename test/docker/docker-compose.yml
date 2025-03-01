@@ -1,5 +1,5 @@
 version: '3.8'
-name: tnslib
+name: tnscli
 services:
   oracle:
     image: 'gvenzl/oracle-free:23.5-slim'
@@ -40,7 +40,7 @@ services:
         - LDAP_ALLOW_ANON_BINDING=yes
 
   dns:
-    image: "tnslib-dns:latest"
+    image: "tnscli-dns:latest"
     build:
       context: oracle-dns
       dockerfile: Dockerfile
