@@ -1,7 +1,14 @@
 # Changelog tnscli
 
+## [v3.9.7 - 2025-03-01]
+### Changed
+- update dependencies
+- update goreleaser and docker compose configs
+### Fixed
+- linter issue in version
+
 ## [v3.9.6 - 2024-10-03]
-#### New
+### New
 - add arm64 target
 ### Changed
 - use Go1.23
