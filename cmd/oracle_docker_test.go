@@ -16,7 +16,7 @@ import (
 const (
 	dbPort             = "21521"
 	dbRepo             = "docker.io/gvenzl/oracle-free"
-	dbRepoTag          = "23.5-slim"
+	dbRepoTag          = "23.26.0-slim"
 	dbContainerTimeout = 600
 	dbTimeout          = 5
 
