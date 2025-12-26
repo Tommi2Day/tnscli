@@ -1,6 +1,5 @@
-# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
-# CRC32 602a83d1
 dn: cn=oidrdbms,cn=schema,cn=config
+changetype: add
 objectClass: olcSchemaConfig
 cn: oidrdbms
 olcAttributeTypes: {0}( 2.16.840.1.113894.2.1.1 NAME 'orclDBtrustedUser' EQU

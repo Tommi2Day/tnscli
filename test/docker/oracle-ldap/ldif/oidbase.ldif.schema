@@ -1,6 +1,5 @@
-# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
-# CRC32 76b027ec
 dn: cn=oidbase,cn=schema,cn=config
+changetype: add
 objectClass: olcSchemaConfig
 cn: oidbase
 olcAttributeTypes: {0}( 2.16.840.1.113894.7.1.1 NAME 'orclVersion' EQUALITY 

@@ -33,6 +33,7 @@ const ldapTimeout = 20
 const LdapBaseDn = "dc=oracle,dc=local"
 const LdapAdminUser = "cn=admin," + LdapBaseDn
 const LdapAdminPassword = "admin"
+const LdapConfigUser = "cn=config"
 const LdapConfigPassword = "config"
 
 const ldaptns = `
@@ -97,10 +98,13 @@ func TestOracleLdap(t *testing.T) {
 		t.Skip("Skipping LDAP testing in CI environment")
 	}
 	TnsLdapContainer, err = prepareTnsLdapContainer()
+	defer common.DestroyDockerContainer(TnsLdapContainer)
 	require.NoErrorf(t, err, "Ldap Server not available")
 	require.NotNil(t, TnsLdapContainer, "Prepare failed")
-	defer common.DestroyDockerContainer(TnsLdapContainer)
-	server, port = common.GetContainerHostAndPort(TnsLdapContainer, "1389/tcp")
+	if TnsLdapContainer == nil {
+		t.Fatalf("Ldap Server not available")
+	}
+	server, port = common.GetContainerHostAndPort(TnsLdapContainer, "389/tcp")
 	// create test file to load
 	err = common.WriteStringToFile(tnsSource1, ldaptns)
 	require.NoErrorf(t, err, "Create test %s failed", tnsSource1)
@@ -267,7 +271,7 @@ func TestOracleLdap(t *testing.T) {
 			"--unit-test",
 		}
 		// write to Stdin
-		_, _ = w.WriteString(fmt.Sprintf("%s\n", LdapAdminPassword))
+		_, _ = fmt.Fprintf(w, "%s\n", LdapAdminPassword)
 
 		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error:%s", err)

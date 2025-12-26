@@ -1,6 +1,5 @@
-# AUTO-GENERATED FILE - DO NOT EDIT!! Use ldapmodify.
-# CRC32 a967d99b
 dn: cn=oidnet,cn=schema,cn=config
+changetype: add
 objectClass: olcSchemaConfig
 cn: oidnet
 olcAttributeTypes: {0}( 2.16.840.1.113894.3.1.1 NAME 'orclNetSourceRoute' SY

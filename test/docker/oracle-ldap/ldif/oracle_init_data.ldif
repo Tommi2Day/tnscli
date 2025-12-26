@@ -1,0 +1,16 @@
+# ldapadd -c -x -D "cn=admin,dc=oracle,dc=local" -W -f ldap_db_init.ldif
+#OracleContext
+dn: cn=OracleContext,dc=oracle,dc=local
+changetype: add
+objectClass: top
+objectClass: orclContext
+cn: OracleContext
+
+#DBA Group
+dn: cn=Dbas,ou=Groups,dc=oracle,dc=local
+changetype: add
+cn: Dbas
+objectClass: top
+objectClass: groupOfNames
+member: cn=admin,dc=oracle,dc=local
+

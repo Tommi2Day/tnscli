@@ -1,5 +1,13 @@
 # Changelog tnscli
 
+## [v3.9.8 - 2025-12-28]
+### Changed
+- use Go1.25
+- update dependencies
+- use golangci-lint v2
+- replace bitnami/openldap with cleanstart/openldap and scripts
+- update workflows
+
 ## [v3.9.7 - 2025-03-01]
 ### Changed
 - update dependencies
