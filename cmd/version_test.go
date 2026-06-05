@@ -24,7 +24,7 @@ func TestVersion(t *testing.T) {
 		args := []string{
 			"version",
 			"--debug",
-			"--unit-test",
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		assert.NoErrorf(t, err, "version command should not return an error:%s", err)

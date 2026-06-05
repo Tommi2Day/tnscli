@@ -50,9 +50,9 @@ func TestRACInfo(t *testing.T) {
 		t.Skip("Skipping DNS testing in CI environment")
 	}
 	tnscliDNSContainer, err = prepareDNSContainer()
+	defer destroyDNSContainer(tnscliDNSContainer)
 	require.NoErrorf(t, err, "DNS Server not available")
 	require.NotNil(t, tnscliDNSContainer, "Prepare failed")
-	defer destroyDNSContainer(tnscliDNSContainer)
 	// use DNS from Docker
 	dns := netlib.NewResolver(tnscliDNSServer, tnscliDNSPort, true)
 	dns.Timeout = 8 * time.Second
@@ -82,14 +82,14 @@ func TestRACInfo(t *testing.T) {
 	t.Run("CMD FREE Port info IP Addr", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"info",
-			"ports",
-			"--filename", connectfilename,
-			"--service", "FREE.local",
-			"--info",
-			"--nodns",
-			"--unit-test",
+			cmdService,
+			cmdInfo,
+			cmdPorts,
+			flagFilename, connectfilename,
+			flagService, "FREE.local",
+			flagInfo,
+			flagNodns,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -100,16 +100,16 @@ func TestRACInfo(t *testing.T) {
 	t.Run("CMD Port info", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"info",
-			"ports",
-			"--filename", racfilename,
-			"--service", racalias,
-			"--info",
+			cmdService,
+			cmdInfo,
+			cmdPorts,
+			flagFilename, racfilename,
+			flagService, racalias,
+			flagInfo,
 			"--nameserver", fmt.Sprintf("%s:%d", tnscliDNSServer, tnscliDNSPort),
 			"--dnstcp",
 			"--nodns=false",
-			"--unit-test",
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)

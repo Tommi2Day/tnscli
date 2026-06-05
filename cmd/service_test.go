@@ -23,7 +23,7 @@ func TestOracleConnect(t *testing.T) {
 	}
 
 	const toalias = "TOTEST.local"
-	const totest = "(DESCRIPTION=((TRANSPORT_CONNECT_TIMEOUT=3)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=totest)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=totest.local)))"
+	const totest = "(DESCRIPTION=((TRANSPORT_CONNECT_TIMEOUT=3)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=8.8.8.7)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=totest.local)))"
 	tnsFilename := tnsAdminDir + "/connect.ora"
 	_ = common.WriteStringToFile(tnsFilename, xealias+"="+xetest+"\n\n"+toalias+"="+totest)
 	t.Logf("load from %s", tnsFilename)
@@ -59,12 +59,12 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD Check with dummy", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"check",
-			"--filename", tnsFilename,
-			"--service", xealias,
-			"--info",
-			"--unit-test",
+			cmdService,
+			cmdCheck,
+			flagFilename, tnsFilename,
+			flagService, xealias,
+			flagInfo,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -76,12 +76,12 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD all Check with dummy", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"check",
-			"--filename", tnsFilename,
+			cmdService,
+			cmdCheck,
+			flagFilename, tnsFilename,
 			"--all",
-			"--info",
-			"--unit-test",
+			flagInfo,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -93,15 +93,15 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD Check with real user", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"check",
-			"--filename", tnsFilename,
-			"--service", xealias,
+			cmdService,
+			cmdCheck,
+			flagFilename, tnsFilename,
+			flagService, xealias,
 			"--user", dbSystemUser,
 			"--password", dbPassword,
 			"--timeout", fmt.Sprintf("%d", dbTimeout),
-			"--info",
-			"--unit-test",
+			flagInfo,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -112,11 +112,11 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD false Check", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"check",
-			"--filename", tnsFilename,
-			"--service", "dummy",
-			"--unit-test",
+			cmdService,
+			cmdCheck,
+			flagFilename, tnsFilename,
+			flagService, "dummy",
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -126,16 +126,16 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD DBHOST Query", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"check",
-			"--filename", tnsFilename,
-			"--service", xealias,
+			cmdService,
+			cmdCheck,
+			flagFilename, tnsFilename,
+			flagService, xealias,
 			"--dbhost",
 			"--user", dbSystemUser,
 			"--password", dbPassword,
 			"--timeout", fmt.Sprintf("%d", dbTimeout),
-			"--info",
-			"--unit-test",
+			flagInfo,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -148,14 +148,14 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD FREE Port Info", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"info",
-			"ports",
-			"--filename", tnsFilename,
-			"--service", xealias,
-			"--info",
-			"--nodns",
-			"--unit-test",
+			cmdService,
+			cmdInfo,
+			cmdPorts,
+			flagFilename, tnsFilename,
+			flagService, xealias,
+			flagInfo,
+			flagNodns,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -168,13 +168,13 @@ func TestOracleConnect(t *testing.T) {
 		t.Run("CMD JDBC info normal", func(t *testing.T) {
 			out := ""
 			args := []string{
-				"service",
-				"info",
-				"jdbc",
-				"--filename", tnsFilename,
-				"--service", xealias,
-				"--info",
-				"--unit-test",
+				cmdService,
+				cmdInfo,
+				cmdJdbc,
+				flagFilename, tnsFilename,
+				flagService, xealias,
+				flagInfo,
+				flagUnitTest,
 			}
 			out, err = common.CmdRun(RootCmd, args)
 			t.Log(out)
@@ -186,13 +186,13 @@ func TestOracleConnect(t *testing.T) {
 		t.Run("CMD JDBC Timeout replaced", func(t *testing.T) {
 			out := ""
 			args := []string{
-				"service",
-				"info",
-				"jdbc",
-				"--filename", tnsFilename,
-				"--service", toalias,
-				"--info",
-				"--unit-test",
+				cmdService,
+				cmdInfo,
+				cmdJdbc,
+				flagFilename, tnsFilename,
+				flagService, toalias,
+				flagInfo,
+				flagUnitTest,
 			}
 			out, err = common.CmdRun(RootCmd, args)
 			t.Log(out)
@@ -204,14 +204,14 @@ func TestOracleConnect(t *testing.T) {
 		t.Run("CMD JDBC Timeout not replaced", func(t *testing.T) {
 			out := ""
 			args := []string{
-				"service",
-				"info",
-				"jdbc",
-				"--filename", tnsFilename,
-				"--service", toalias,
+				cmdService,
+				cmdInfo,
+				cmdJdbc,
+				flagFilename, tnsFilename,
+				flagService, toalias,
 				"--noModifyTransportConnectTimeout",
-				"--info",
-				"--unit-test",
+				flagInfo,
+				flagUnitTest,
 			}
 			out, err = common.CmdRun(RootCmd, args)
 			t.Log(out)
@@ -223,13 +223,13 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD TNS info", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
-			"info",
+			cmdService,
+			cmdInfo,
 			"tns",
-			"--filename", tnsFilename,
-			"--service", xealias,
-			"--info",
-			"--unit-test",
+			flagFilename, tnsFilename,
+			flagService, xealias,
+			flagInfo,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -241,13 +241,13 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD Portcheck", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
+			cmdService,
 			"portcheck",
-			"--filename", tnsFilename,
-			"--service", xealias,
-			"--info",
-			"--nodns",
-			"--unit-test",
+			flagFilename, tnsFilename,
+			flagService, xealias,
+			flagInfo,
+			flagNodns,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
@@ -259,17 +259,17 @@ func TestOracleConnect(t *testing.T) {
 	t.Run("CMD Portcheck Error", func(t *testing.T) {
 		out := ""
 		args := []string{
-			"service",
+			cmdService,
 			"portcheck",
-			"--filename", tnsFilename,
-			"--service", toalias,
-			"--info",
-			"--nodns",
-			"--unit-test",
+			flagFilename, tnsFilename,
+			flagService, toalias,
+			flagInfo,
+			flagNodns,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		t.Log(out)
 		assert.NoErrorf(t, err, "Check should succeed")
-		assert.Contains(t, out, "PROBLEM", "Port result should be PROBLEM")
+		assert.Contains(t, out, "TIMEOUT", "Port result should contain TIMEOUT")
 	})
 }

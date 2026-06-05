@@ -133,13 +133,13 @@ func TestParseTns(t *testing.T) {
 				name:    "XE-full",
 				alias:   "XE.local",
 				success: true,
-				service: "XE",
+				service: constXE,
 			},
 			{
 				name:    "XE-short",
-				alias:   "XE",
+				alias:   constXE,
 				success: true,
-				service: "XE",
+				service: constXE,
 			},
 			{
 				name:    "XE-SID",
@@ -186,7 +186,7 @@ func TestParseTns(t *testing.T) {
 		}
 	})
 
-	alias := "XE"
+	alias := constXE
 	t.Run("Check entry value", func(t *testing.T) {
 		e, ok := dblib.GetEntry(alias, tnsEntries, domain)
 		assert.True(t, ok, "Alias %s not found", alias)
@@ -218,9 +218,9 @@ func TestParseTns(t *testing.T) {
 		args := []string{
 			"list",
 			"-A", tnsAdminDir,
-			"--filename", filename,
+			flagFilename, filename,
 			"--search", "XE1",
-			"--info",
+			flagInfo,
 			"--unit-test",
 		}
 		out, err = common.CmdRun(RootCmd, args)

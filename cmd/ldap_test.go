@@ -214,7 +214,7 @@ func TestOracleLdap(t *testing.T) {
 	})
 	t.Run("Write TNS to Ldap", func(t *testing.T) {
 		args := []string{
-			"ldap",
+			cmdLdap,
 			"write",
 			"--ldap.oraclectx", LdapBaseDn,
 			"--ldap.host", server,
@@ -223,8 +223,8 @@ func TestOracleLdap(t *testing.T) {
 			"--ldap.binddn", LdapAdminUser,
 			"--ldap.bindpassword", LdapAdminPassword,
 			"--ldap.tnssource", tnsSource1,
-			"--info",
-			"--unit-test",
+			flagInfo,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error: %s", err)
@@ -238,14 +238,14 @@ func TestOracleLdap(t *testing.T) {
 		_ = os.Remove(filename)
 		_ = os.Setenv("LDAP_BIND_PASSWORD", LdapAdminPassword)
 		args := []string{
-			"ldap",
+			cmdLdap,
 			"read",
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", port),
 			"--ldap.tnstarget", filename,
 			"--config", testConfig,
-			"--info",
-			"--unit-test",
+			flagInfo,
+			flagUnitTest,
 		}
 		out, err = common.CmdRun(RootCmd, args)
 		require.NoErrorf(t, err, "Command returned error:%s", err)
@@ -262,13 +262,13 @@ func TestOracleLdap(t *testing.T) {
 		require.NoErrorf(t, err, "Pipe failed")
 		inputReader = r
 		args := []string{
-			"ldap",
+			cmdLdap,
 			"clear",
 			"--ldap.host", server,
 			"--ldap.port", fmt.Sprintf("%d", port),
 			"--config", testConfig,
-			"--info",
-			"--unit-test",
+			flagInfo,
+			flagUnitTest,
 		}
 		// write to Stdin
 		_, _ = fmt.Fprintf(w, "%s\n", LdapAdminPassword)

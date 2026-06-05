@@ -148,10 +148,13 @@ func initConfig() {
 func processConfig() (bool, error) {
 	err := viper.ReadInConfig()
 	haveConfig := false
+	cfgFile = viper.ConfigFileUsed()
 	if err == nil {
-		cfgFile = viper.ConfigFileUsed()
 		haveConfig = true
 		viper.Set("config", cfgFile)
+	} else if cfgFile != "" {
+		err = fmt.Errorf("%s:%v", cfgFile, err)
+		cfgFile = ""
 	}
 	return haveConfig, err
 }

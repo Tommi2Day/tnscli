@@ -26,13 +26,13 @@ import (
 
 var (
 	serviceCmd = &cobra.Command{
-		Use:   "service",
+		Use:   cmdService,
 		Short: "Service sub command",
 		Long:  ``,
 	}
 
 	checkCmd = &cobra.Command{
-		Use:          "check",
+		Use:          cmdCheck,
 		Short:        "Check TNS Entries",
 		Long:         `Check all TNS Entries or one with real connect to database`,
 		RunE:         checkTns,
@@ -46,19 +46,19 @@ var (
 		SilenceUsage: true,
 	}
 	infoCmd = &cobra.Command{
-		Use:   "info",
+		Use:   cmdInfo,
 		Short: "give details for the given service",
 		Long:  `printout more details for the service`,
 	}
 	portInfoCmd = &cobra.Command{
-		Use:          "ports",
+		Use:          cmdPorts,
 		Short:        "list service addresses and ports",
 		Long:         `list defined host:port and checks if requested. If racinfo.ini given, it will be listed as well`,
 		RunE:         portInfo,
 		SilenceUsage: true,
 	}
 	jdbcInfoCmd = &cobra.Command{
-		Use:          "jdbc",
+		Use:          cmdJdbc,
 		Short:        "print tns entry as jdbc string",
 		Long:         `printout jdbc string for the service`,
 		RunE:         getJdbcInfo,
@@ -73,8 +73,18 @@ var (
 	}
 )
 
+const (
+	cmdService = "service"
+	cmdCheck   = "check"
+	cmdInfo    = "info"
+	cmdPorts   = "ports"
+	cmdJdbc    = "jdbc"
+)
+
 const defaultUser = "C##TCHECK"
-const defaultPassword = "C0nnectMe!now"
+
+// nolint gosec
+const defaultPassword = "Test2Devk#25"
 const racinfoFile = "racinfo.ini"
 
 var dbUser = ""
@@ -246,6 +256,10 @@ func doTCPPing(host string, address string) {
 
 func getTnsInfo(_ *cobra.Command, args []string) (err error) {
 	if tnsKey == "" {
+		if len(args) == 0 {
+			err = fmt.Errorf("dont have a service to check, use --service to provide")
+			return
+		}
 		tnsKey = args[0]
 	}
 	entry, err := getEntry(tnsKey)
@@ -268,6 +282,10 @@ func getTnsInfo(_ *cobra.Command, args []string) (err error) {
 func getJdbcInfo(_ *cobra.Command, args []string) (err error) {
 	out := ""
 	if tnsKey == "" {
+		if len(args) == 0 {
+			err = fmt.Errorf("dont have a service to check, use --service to provide")
+			return
+		}
 		tnsKey = args[0]
 	}
 	entry, err := getEntry(tnsKey)
