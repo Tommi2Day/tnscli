@@ -9,371 +9,447 @@ Small Oracle TNS Service and Connect Test Tool
 
 
 ## Features
-- connect to a given service using real connect method. 
+
+- connect to a given service using real connect method.
 - Uses given credentials or default to raise an ORA-1017 error
-- search or list tns entries
-- load and write tnsnames.ora to ldap
-- generates JDBC String for a service
-- list all affected RAC Hosts/Ports for a given service using DNS SRV entries or racinfo file
-- run a portcheck(TCP connect test) on all needed ports
+- List and search TNS entries from `tnsnames.ora` and LDAP
+- Check TNS service connectivity via TCP (and optionally a real database login)
+- Port check all addresses of a service, including RAC VIPs
+- RAC address resolution via DNS SRV records or `racinfo.ini`
+- Service detail queries: address list, JDBC connection string, raw TNS descriptor
+- LDAP TNS entry management (read, write, clear) via OpenLDAP with OID schema
+- Configurable via YAML config file, environment variables, or CLI flags
+- Addon scripts: `dbhost`, `gotodb`, `tnslookup`
 
-## Setup
-### recommanded: setup db test user
-**CAUTION**: Don't use anonymous checks for permanent monitoring. Some security analysis systems are qualifying this as "Brute-Force-Attack" if the check are started too often. 
-Instead, set $TNSCLI_USER and TNSCLI_PASSWORD env or use --user and --password flag in check command to connect an existing user. This user needs only a `connect` privilege.
-Replace `c##tcheck`, `tcheck` and `<MyCheckPassword>` with your own secrets
--   **sample for set up a common user within CDB$ROOT**
- 
-    ```sql
-    alter session set container=cdb$root;
-    create user c##tcheck identified by "<MyCheckPassword>"
-        default tablespace users temporary tablespace temp
-        account unlock container=all;
-    grant connect to c##tcheck container=all;
-    alter user c##tcheck default role all container=all;
-    ```
--   **sample for set up a traditional (non-cdb) user **
-    ```sql
-    create user tcheck identified by "<MyCheckPassword>"
-        default tablespace users temporary tablespace temp
-        account unlock;
-    grant connect to tcheck;
-    alter user c##tcheck default role all container=all;
-    ```
-- export user secrets to environment
-  ```bash
-  export TNSCLI_USER="c##tcheck" # or 
-  # export TNSCLI_USER="tcheck"
-  export TNSCLI_PASSWORD="<MyCheckPassword>"
-  ``` 
-### optional: setup RAC Address info
-ORACLE address info can be provided with DNS SRV entries or a racinfo.ini file in $TNS_ADMIN directory.
+## Contents
 
--   *DNS SRV format:*
-    ```
-    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 myrac.rac.lan.
-    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip1.rac.lan.
-    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip2.rac.lan.
-    _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip3.rac.lan.
-    ```
+- [Installation](#installation)
+- [Configuration](#configuration)
+  - [DB test user](#db-test-user)
+  - [RAC address info](#rac-address-info)
+- [list — List TNS entries](#list--list-tns-entries)
+- [service check — Check TNS entries](#service-check--check-tns-entries)
+- [service portcheck — Port check](#service-portcheck--port-check)
+- [service info — Service details](#service-info--service-details)
+  - [service info ports](#service-info-ports--list-addresses-and-ports)
+  - [service info jdbc](#service-info-jdbc--print-jdbc-string)
+  - [service info tns](#service-info-tns--print-tns-entry)
+- [ldap — LDAP TNS entries](#ldap--ldap-tns-entries)
+  - [ldap read](#ldap-read--read-tns-entries-from-ldap)
+  - [ldap write](#ldap-write--write-tns-entries-to-ldap)
+  - [ldap clear](#ldap-clear--clear-ldap-tns-entries)
+- [Addon scripts](#addon-scripts)
+- [Global flags](#global-flags)
+- [version](#version--print-version-information)
 
--   *racinfo.ini format*
-    ```
-    [RAC DNS Name as in tnsnames HOST Entry]
-    san=scan-address:port
-    vip1=vip-address1:port
-    vip2=vip-address2:port
-    ...
-    Example:
-    [MYRAC.RAC.LAN]
-    scan=myrac.rac.lan:1521
-    vip1=vip1.rac.lan:1521
-    vip2=vip2.rac.lan:1521
-    vip3=vip3.rac.lan:1521
-    ``` 
+---
 
+## Installation
 
-## Usage
-```bash
-tnscli – Small Oracle TNS Service and Connect Test Tool
+Download the latest release binaries from [GitLab](https://gitlab.intern.tdressler.net/goproj/tnscli/-/releases)
+or install with Go:
 
-Usage:                         
-  tnscli [command]             
-                               
-Available Commands:            
-  completion  Generate the autocompletion script for the specified shell
-  help        Help about any command
-  ldap        LDAP TNS Entries
-  list        list TNS Entries
-  service     Service sub command
-  version     version print version string
-
-Flags:
-  -c, --config string      config file
-      --debug              verbose debug output
-  -f, --filename string    path to alternate tnsnames.ora
-  -h, --help               help for tnscli
-      --info               reduced info output
-      --no-color           disable colored log output
-  -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
-      --unit-test          redirect output for unit tests
-
-Use "tnscli [command] --help" for more information about a command.
-
-tnscli service [command]
-
-Available Commands:
-  check       Check TNS Entries
-  info        give details for the given service
-  portcheck   try to connect each service and report if it is open or not
-
-Flags:
-  -h, --help             help for service
-  -s, --service string   service name to check
-
-
-tnscli service check [flags]
-Check all TNS Entries or one with real connect to database
-Flags:
-  -a, --all               check all entries
-  -H, --dbhost            print actual connected host:cdb:pdb
-  -h, --help              help for check
-  -p, --password string   Password for real connect or set TNSCLI_PASSWORD
-  -t, --timeout int       timeout in sec (default 15)
-  -u, --user string       User for real connect or set TNSCLI_USER
-
-Global Flags:
-  -c, --config string      config file
-      --debug              verbose debug output
-  -f, --filename string    path to alternate tnsnames.ora
-      --info               reduced info output
-  -s, --service string     service name to check
-  -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
-
-
-tnscli service portcheck [flags]
-list defined host:port and checks if requested. If racinfo.ini or SRV info given,  addresses will be checked as well
-Flags:
-      --dnstcp              Use TCP to resolve DNS names
-  -h, --help                help for portcheck
-      --ipv4                resolve only IPv4 addresses
-  -n, --nameserver string   alternative nameserver to use for DNS lookup (IP:PORT)
-      --nodns               do not use DNS to resolve hostnames
-  -r, --racinfo string      path to racinfo.ini to resolve all RAC TCP Adresses, default $TNS_ADMIN/racinfo.ini
-  -t, --timeout int         timeout for tcp ping (default 5)
-
-
-tnscli service info [command]
-
-Available Commands:
-  jdbc        print tns entry as jdbc string
-  ports       list service addresses and ports
-  tns         print tns entry for the given service
-
-Flags:
-  -h, --help   help for info
-
-Global Flags:
-  -c, --config string      config file
-      --debug              verbose debug output
-  -f, --filename string    path to alternate tnsnames.ora
-      --info               reduced info output
-  -s, --service string     service name to check
-  -A, --tns_admin string   TNS_ADMIN directory (default "$TNS_ADMIN")
-
-tnscli service info ports [flags]
-list defined host:port and checks if requested. If racinfo.ini given, it will be listed as well
-Flags:
-      --dnstcp              Use TCP to resolve DNS names
-  -h, --help                help for ports
-      --ipv4                resolve only IPv4 addresses
-  -n, --nameserver string   alternative nameserver to use for DNS lookup (IP:PORT)
-      --nodns               do not use DNS to resolve hostnames
-  -r, --racinfo string      path to racinfo.ini to resolve all RAC TCP Adresses, default $TNS_ADMIN/racinfo.ini
-
-
-tnscli service info jdbc [flags]
-printout jdbc string for the service
-Flags:
-  -h, --help                              help for jdbc
-      --noModifyTransportConnectTimeout   Do not modify TRANSPORT_CONNECT_TIMEOUT in ms
-
-
-tnscli list [flags]
-list all TNS Entries or search one
-Flags:
-  -C, --complete        print complete entry
-  -h, --help            help for list
-  -s, --search string   service name to check
-
-tnscli ldap [command]
-handle TNS entries stored in LDAP Server
-Available Commands:
-  clear       clear ldap tns entries
-  read        prints ldap tns entries to stdout
-  write       update ldap tns entries
-
-Flags:
-  -h, --help                       help for ldap
-  -b, --ldap.base string            Base DN to search from
-  -D, --ldap.binddn string         DN of user for LDAP bind, empty for anonymous access
-  -w, --ldap.bindpassword string   password for LDAP Bind
-  -H, --ldap.host string           Hostname of Ldap Server
-  -I, --ldap.insecure              do not verify TLS
-  -o, --ldap.oraclectx string       Base DN of Oracle Context
-  -p, --ldap.port int              ldapport to connect, 0 means TLS flag will decide
-      --ldap.timeout int           ldap timeout in sec (default 20)
-  -T, --ldap.tls                   use secure ldap (ldaps)
-
+```sh
+go install gitlab.intern.tdressler.net/goproj/tnscli@latest
 ```
-### Return Codes
-- 0 success
-- 1 failed
 
-## Examples
+---
 
-```bash
->tnscli -version
+## Configuration
 
-# list only service names for named tnsnames.ora
->tnscli list -f test/testdata/connect.ora
-XE.LOCAL
+Settings are resolved in this order (later sources override earlier ones):
 
+1. YAML config file — searched in order, first found wins:
+   - `./tnscli.yaml` (current directory)
+   - `$HOME/.config/tnscli.yaml`
+   - `$HOME/etc/tnscli.yaml`
+   - `/etc/tnscli.yaml`
+   - or set explicitly with `--config` / `-c`
+2. Environment variables — prefix `TNSCLI_`, dots replaced by underscores (e.g. `TNSCLI_LDAP_HOST`)
+3. CLI flags
 
-# list entries with full description 
->tnscli list --complete -f test/testdata/connect.ora 
-# Location: test/testdata/connect.ora Line: 1
-XE.LOCAL=  (DESCRIPTION=  (ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=21521)))  (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))
+### DB test user
 
+**CAUTION**: Do not use anonymous checks for permanent monitoring. Some security analysis systems treat frequent anonymous connect attempts as a brute-force attack. Instead, set `TNSCLI_USER` and `TNSCLI_PASSWORD` env vars or use `--user` / `--password` flags in the `service check` command. The user only needs a `connect` privilege.
 
-# list nonexisting service
->tnscli list --search  mydb
-Error: no alias with 'mydb' found
+Replace `c##tcheck`, `tcheck`, and `<MyCheckPassword>` with your own values.
 
-# give tNS String for a service
->tnscli service info tns xe -A test/testdata/
-# Location: ifile.ora Line: 6 
-XE.LOCAL=  (DESCRIPTION =
-          (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
-          (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE))
-  )
+- **Common user in CDB$ROOT:**
 
-#give jdbc string for a service
->tnscli service info jdbc xe -A test/testdata/
-jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XE)))
+  ```sql
+  alter session set container=cdb$root;
+  create user c##tcheck identified by "<MyCheckPassword>"
+      default tablespace users temporary tablespace temp
+      account unlock container=all;
+  grant connect to c##tcheck container=all;
+  alter user c##tcheck default role all container=all;
+  ```
 
-#give target host and port for a service
->tnscli service info server xe -A test/testdata/
-127.0.0.1:1521
+- **Traditional (non-CDB) user:**
 
-# check if port is open for a service
->tnscli service portcheck xe.local -A test/testdata
-127.0.0.1 (127.0.0.1:1521) is OPEN
+  ```sql
+  create user tcheck identified by "<MyCheckPassword>"
+      default tablespace users temporary tablespace temp
+      account unlock;
+  grant connect to tcheck;
+  alter user tcheck default role all;
+  ```
 
-# give ALL target host and port for a service with RAC and DNS SRV resolution
->tnscli service info ports myrac -f test/testdata/rac.ora --nameserver 127.0.0.1
-vip1.rac.lan (172.24.0.13:1521)
-vip3.rac.lan (172.24.0.15:1521)
-vip2.rac.lan (172.24.0.14:1521)
-myrac.rac.lan (172.24.0.3:1521)
-myrac.rac.lan (172.24.0.4:1521)
-myrac.rac.lan (172.24.0.5:1521)
+- **Export credentials to the environment:**
 
-# static resolution with racinfo.ini without DNS. With DNS access hostnames will be resolved to IP addresses as above
-service info ports myrac -f test/testdata/rac.ora -r test/testdata/racinfo.ini --nodns
-myrac.rac.lan (myrac.rac.lan:1521)
-vip1.rac.lan (vip1.rac.lan:1521)
-vip2.rac.lan (vip2.rac.lan:1521)
-vip3.rac.lan (vip3.rac.lan:1521)
+  ```bash
+  export TNSCLI_USER="c##tcheck"
+  export TNSCLI_PASSWORD="<MyCheckPassword>"
+  ```
 
+### RAC address info
 
-# login check for unavailable service with tnsnames.ora in $TNS_ADMIN
->tnscli check xe.local
-Error: service XE.LOCAL  NOT reached:dial tcp 127.0.0.1:1521: 
+RAC address details can be provided via DNS SRV records or a `racinfo.ini` file placed in `$TNS_ADMIN`.
 
-# check connect to service xe with dummy credentials, expect ORA-01017  
->tnscli check xe -f test/testdata/connect.ora --info
-[Thu, 13 Apr 2023 21:25:27 CEST]  INFO use entry 
-XE.LOCAL=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=21521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))
+- **DNS SRV format:**
 
+  ```
+  _myrac._tcp.rac.lan.  IN SRV 10 5 1521 myrac.rac.lan.
+  _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip1.rac.lan.
+  _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip2.rac.lan.
+  _myrac._tcp.rac.lan.  IN SRV 10 5 1521 vip3.rac.lan.
+  ```
 
-[Thu, 13 Apr 2023 21:25:28 CEST]  WARN Connect OK, but Login error, maybe expected
-[Thu, 13 Apr 2023 21:25:28 CEST]  INFO service xe connected  in 1.06s
+- **racinfo.ini format** (`$TNS_ADMIN/racinfo.ini`):
 
-OK, service XE.LOCAL reachable
+  ```ini
+  [MYRAC.RAC.LAN]
+  scan=myrac.rac.lan:1521
+  vip1=vip1.rac.lan:1521
+  vip2=vip2.rac.lan:1521
+  vip3=vip3.rac.lan:1521
+  ```
 
+---
 
-# use TNSCLI_USER/TNSCLI_PASSWORD variables for real login checks
->export TNSCLI_PASSWORD=supersecret
->tnscli check xe -f test/testdata/connect.ora --user system --info
-[Thu, 13 Apr 2023 21:23:37 CEST]  INFO use entry 
-XE.LOCAL=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=21521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))
+## list — List TNS entries
 
+```sh
+tnscli list [flags]
+```
 
-[Thu, 13 Apr 2023 21:23:37 CEST]  INFO service xe connected using user 'system' in 69ms
+Lists all TNS aliases found in the configured `tnsnames.ora`, or searches for a specific alias.
 
-OK, service XE.LOCAL reachable
+| Flag | Description |
+|------|-------------|
+| `--complete` / `-C` | Print the full TNS descriptor for each entry |
+| `--search` / `-s` | Filter output to aliases matching this string |
 
-# find host, CDB and PDB to the givven service
-# this needs a proper login to the DB via --user/--password or TNSCLI_USER/TNSCLI_PASSWORD
->tnscli check -H -A test/testdata XEPDB1.local
-XEPDB1.local -> localhost:XE:XEPDB1
+**Examples:**
 
-# write tnsnames.ora to ldap server (openldap with oid* schema extensions), all parameters via commandline
->tnscli ldap write \
-  --ldap.host=127.0.0.1 \
-  --ldap.port=1636 -T -I \
+```sh
+# List all alias names
+tnscli list -f test/testdata/connect.ora
+
+# List entries with full descriptor
+tnscli list --complete -f test/testdata/connect.ora
+
+# Search for a specific alias
+tnscli list --search mydb
+```
+
+---
+
+## service check — Check TNS entries
+
+```sh
+tnscli service check [flags]
+```
+
+Performs a real TCP connect (and optionally a database login) to verify a TNS entry is reachable. Without `--user`/`--password`, connects with the built-in dummy credentials and expects an `ORA-01017` login error — confirming the port is open without requiring a real account.
+
+| Flag | Description |
+|------|-------------|
+| `--service` / `-s` | Service alias to check **(required unless `--all`)** |
+| `--all` / `-a` | Check all entries in the TNS file |
+| `--user` / `-u` | Username for real connect (or set `TNSCLI_USER`) |
+| `--password` / `-p` | Password for real connect (or set `TNSCLI_PASSWORD`) |
+| `--timeout` / `-t` | Connect timeout in seconds (default 15) |
+| `--dbhost` / `-H` | Print the actual connected host, CDB, and PDB from `sys_context` |
+
+**Examples:**
+
+```sh
+# Check with dummy credentials — confirms port is open, expects ORA-01017
+tnscli service check -s xe.local -f test/testdata/connect.ora --info
+
+# Check with real credentials
+tnscli service check -s xe.local -f test/testdata/connect.ora \
+  --user system --password supersecret
+
+# Use env vars for credentials
+export TNSCLI_USER="c##tcheck"
+export TNSCLI_PASSWORD="<MyCheckPassword>"
+tnscli service check -s xe.local
+
+# Print connected host:CDB:PDB (requires valid login)
+tnscli service check -s XEPDB1.local -H -A test/testdata
+
+# Check all entries in a file
+tnscli service check --all -f test/testdata/connect.ora
+```
+
+---
+
+## service portcheck — Port check
+
+```sh
+tnscli service portcheck [flags]
+```
+
+Performs a TCP connect test on all host:port addresses for a service. If RAC info is available (DNS SRV or `racinfo.ini`), all RAC addresses are checked as well.
+
+| Flag | Description |
+|------|-------------|
+| `--service` / `-s` | Service alias to check |
+| `--nodns` | Do not resolve hostnames via DNS |
+| `--nameserver` / `-n` | Alternative nameserver for DNS lookups (`IP:PORT`) |
+| `--dnstcp` | Use TCP instead of UDP for DNS queries |
+| `--ipv4` | Resolve IPv4 addresses only |
+| `--racinfo` / `-r` | Path to `racinfo.ini` (default `$TNS_ADMIN/racinfo.ini`) |
+| `--timeout` / `-t` | TCP connect timeout in seconds (default 5) |
+
+**Examples:**
+
+```sh
+# Check if all ports for a service are open
+tnscli service portcheck -s xe.local -A test/testdata
+
+# Check with an alternative nameserver
+tnscli service portcheck -s myrac -f test/testdata/rac.ora \
+  --nameserver 127.0.0.1:53
+```
+
+---
+
+## service info — Service details
+
+```sh
+tnscli service info <subcommand> [flags]
+```
+
+Parent command for service detail subcommands. All subcommands share these flags:
+
+| Flag | Description |
+|------|-------------|
+| `--service` / `-s` | Service alias |
+| `--filename` / `-f` | Path to `tnsnames.ora` |
+| `--tns_admin` / `-A` | `TNS_ADMIN` directory |
+
+### service info ports — List addresses and ports
+
+```sh
+tnscli service info ports [flags]
+```
+
+Lists all host:port addresses for a service. Resolves RAC addresses from DNS SRV records or `racinfo.ini` when available.
+
+| Flag | Description |
+|------|-------------|
+| `--nodns` | Do not resolve hostnames via DNS |
+| `--nameserver` / `-n` | Alternative nameserver (`IP:PORT`) |
+| `--dnstcp` | Use TCP for DNS queries |
+| `--ipv4` | Resolve IPv4 addresses only |
+| `--racinfo` / `-r` | Path to `racinfo.ini` (default `$TNS_ADMIN/racinfo.ini`) |
+
+**Examples:**
+
+```sh
+# List all addresses (with DNS SRV resolution)
+tnscli service info ports -s myrac -f test/testdata/rac.ora --nameserver 127.0.0.1
+
+# List addresses from racinfo.ini without DNS resolution
+tnscli service info ports -s myrac -f test/testdata/rac.ora \
+  -r test/testdata/racinfo.ini --nodns
+```
+
+### service info jdbc — Print JDBC string
+
+```sh
+tnscli service info jdbc [flags]
+```
+
+Prints the JDBC thin connection string for a service.
+
+| Flag | Description |
+|------|-------------|
+| `--noModifyTransportConnectTimeout` | Keep `TRANSPORT_CONNECT_TIMEOUT` value as-is (default: convert from seconds to milliseconds) |
+
+**Examples:**
+
+```sh
+tnscli service info jdbc -s xe -A test/testdata/
+# jdbc:oracle:thin:@(DESCRIPTION=(...))
+```
+
+### service info tns — Print TNS entry
+
+```sh
+tnscli service info tns [flags]
+```
+
+Prints the raw TNS descriptor for a service alias.
+
+**Examples:**
+
+```sh
+tnscli service info tns -s xe -A test/testdata/
+```
+
+---
+
+## ldap — LDAP TNS entries
+
+```sh
+tnscli ldap <subcommand> [flags]
+```
+
+Reads and writes TNS entries stored in an OpenLDAP server with OID schema extensions. All `ldap` subcommands share these connection flags:
+
+| Flag | Description |
+|------|-------------|
+| `--ldap.host` / `-H` | LDAP server hostname |
+| `--ldap.port` / `-p` | LDAP port (0 = derive from `--ldap.tls`) |
+| `--ldap.tls` / `-T` | Use LDAPS (implicit TLS) |
+| `--ldap.insecure` / `-I` | Skip TLS certificate verification |
+| `--ldap.binddn` / `-D` | Bind DN for LDAP authentication (empty = anonymous) |
+| `--ldap.bindpassword` / `-w` | Bind password (or set `TNSCLI_LDAP_BINDPASSWORD`) |
+| `--ldap.base` / `-b` | Base DN to search from |
+| `--ldap.oraclectx` / `-o` | Base DN of the Oracle Context |
+| `--ldap.timeout` | LDAP operation timeout in seconds (default 20) |
+
+### ldap read — Read TNS entries from LDAP
+
+```sh
+tnscli ldap read [flags]
+```
+
+Reads TNS entries from the LDAP server and prints them to stdout or writes them to a file.
+
+**Examples:**
+
+```sh
+# Read with config file and password from env
+export TNSCLI_LDAP_BINDPASSWORD=admin
+tnscli ldap read -T -I -c test/tnscli.yaml -A test/testdata
+```
+
+### ldap write — Write TNS entries to LDAP
+
+```sh
+tnscli ldap write [flags]
+```
+
+Reads a `tnsnames.ora` file and writes the entries to the LDAP server.
+
+| Flag | Description |
+|------|-------------|
+| `--ldap.tnssource` | Path to the `tnsnames.ora` source file |
+
+**Examples:**
+
+```sh
+tnscli ldap write \
+  --ldap.host=127.0.0.1 --ldap.port=1636 -T -I \
   --ldap.base="dc=oracle,dc=local" \
   --ldap.oraclectx="dc=oracle,dc=local" \
   --ldap.binddn="cn=admin,dc=oracle,dc=local" \
-  --ldap.bindpassword=admin  \
+  --ldap.bindpassword=admin \
   --ldap.timeout=20 \
-  --ldap.tnssource test/testdata/ldap_file_write.ora 
-Finished successfully. For details run with --info or --debug
-
-#read tnsnames.ora from ldap server with parameter via yaml and password via env
->export TNSCLI_LDAP_BINDPASSWORD=admin
->tnscli ldap read -T -I -c test/tnscli.yaml -A test/testdata 
-[Tue, 23 May 2023 17:23:27 CEST]  INFO Return 2 TNS Ldap Entries
-XE.LOCAL=  
-        (DESCRIPTION =
-                  (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
-                  (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE))
-        )
-  
-XE2.LOCAL=  
-        (DESCRIPTION =
-                  (ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521)))
-                  (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = XE2))
-        )
-  
-[Tue, 23 May 2023 17:23:27 CEST]  INFO SUCCESS: 2 LDAP entries found
-
-
+  --ldap.tnssource test/testdata/ldap_file_write.ora
 ```
 
-## tnscli addon scripts
+### ldap clear — Clear LDAP TNS entries
 
-there are some additional helper scripts available in `/scripts`
+```sh
+tnscli ldap clear [flags]
+```
+
+Removes all TNS entries from the LDAP Oracle Context.
+
+**Examples:**
+
+```sh
+tnscli ldap clear \
+  --ldap.host=127.0.0.1 --ldap.port=1636 -T -I \
+  --ldap.base="dc=oracle,dc=local" \
+  --ldap.oraclectx="dc=oracle,dc=local" \
+  --ldap.binddn="cn=admin,dc=oracle,dc=local" \
+  --ldap.bindpassword=admin
+```
+
+---
+
+## Addon scripts
+
+Helper scripts are available in the `/scripts` directory.
 
 ### dbhost
-`dbhost` is a shortcut for `tnscli service check <service> --dbhost` command. it tries to connect to the given service using default user (or set TNSCLI_USER and TNSCLI_PASSWORD)
-to get host:cdb:pdb from oracle session sys_context
+
+Shortcut for `tnscli service check <service> --dbhost`. Connects to the given service and prints `host:CDB:PDB` from `sys_context`.
+
 ```bash
-  >export TNSCLI_USER="c##tcheck" # or 
-  # export TNSCLI_USER="tcheck"
-  >export TNSCLI_PASSWORD="<MyCheckPassword>"
-  >dbhost MYPDB1
-   
-  racnode1:MYCDB:PDB1
-  ``` 
+export TNSCLI_USER="c##tcheck"
+export TNSCLI_PASSWORD="<MyCheckPassword>"
+dbhost MYPDB1
+# racnode1:MYCDB:PDB1
+```
+
 ### gotodb
-gotodb use dbhost to extract the server hostname from the connection and raises an ssh command to this host. 
-Make sure both, tnscli and dbhost can be found in path 
-If the returned hostname is not a valid dns name you may use of `.ssh/config` to match host user and ssh key
+
+Uses `dbhost` to extract the server hostname and opens an SSH session to that host. Requires both `tnscli` and `dbhost` in `PATH`. Use `~/.ssh/config` if the returned hostname is not directly resolvable:
+
 ```
-host racnode1
-        HostName racnode1.rac.lan
-        User oracle
-        IdentityFile ~/.ssh/id_ora
+Host racnode1
+    HostName racnode1.rac.lan
+    User oracle
+    IdentityFile ~/.ssh/id_ora
 ```
+
 ```bash
->gotodb MYPDB1
-oracle@racnode1 ~>
+gotodb MYPDB1
+# oracle@racnode1 ~>
 ```
+
 ### tnslookup
 
-`tnslookup` is a shortcut for the `tnscli list --search <service> --complete` command
+Shortcut for `tnscli list --search <service> --complete`.
+
 ```bash
->tnslookup mypdb1
-
-Location: /etc/oracle/tnsnames.ora Line: 6
-MYPDB1.LOCAL=  (DESCRIPTION =
-(ADDRESS_LIST = (ADDRESS=(PROTOCOL=TCP)(HOST=myrac.rac.lan)(PORT=1521)))
-(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME = PDB1))
-)
+tnslookup mypdb1
+# Location: /etc/oracle/tnsnames.ora Line: 6
+# MYPDB1.LOCAL=  (DESCRIPTION = ...)
 ```
-## Virus Warnings
 
-some engines are reporting a virus in the binaries. This is a false positive. You may check the binaries with meta engines such as [virustotal.com](https://www.virustotal.com/gui/home/upload) or build your own binary from source. I have no glue why this happens.
+---
+
+## Global flags
+
+These flags apply to every command:
+
+| Flag | Description |
+|------|-------------|
+| `--config` / `-c` | Path to config file (overrides auto-discovery) |
+| `--filename` / `-f` | Path to alternate `tnsnames.ora` |
+| `--tns_admin` / `-A` | `TNS_ADMIN` directory (default `$TNS_ADMIN`) |
+| `--debug` | Verbose debug output |
+| `--info` | Reduced info output |
+| `--no-color` | Disable coloured log output |
+
+---
+
+## version — Print version information
+
+```sh
+tnscli version
+```
+
+Prints the build version, commit hash, and build date injected at release time.
+
+---
 

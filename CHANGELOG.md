@@ -1,5 +1,19 @@
 # Changelog tnscli
 
+## [v3.9.10 - 2026-06-05]
+### Changed
+- use Go 1.26
+- update dependencies
+- bump openldap to 2.6.13 in tests and docker-compose
+- modularize LDAP TNS processing for improved readability
+- replace hardcoded strings with constants in tests and commands
+- update golangci-lint min-occurrences to 4
+- update oracle to 23.26.2
+- update bind9 to 9.21
+### Docs
+- add Features and Installation sections to README
+- expand README with detailed usage examples
+
 ## [v3.9.8 - 2025-12-28]
 ### Changed
 - use Go1.25
