@@ -2,7 +2,7 @@ version: '3.8'
 name: tnscli
 services:
   oracle:
-    image: 'gvenzl/oracle-free:23.26.0-slim'
+    image: 'gvenzl/oracle-free:23.26.2-slim'
     restart: "no"
     environment:
       - 'ORACLE_PASSWORD=FREE-Manager23'
@@ -12,7 +12,7 @@ services:
       - "./oracle-db:/container-entrypoint-initdb.d"
 
   ldap:
-    image: "${VENDOR_IMAGE_PREFIX}docker.io/cleanstart/openldap:2.6.10"
+    image: "${VENDOR_IMAGE_PREFIX}docker.io/cleanstart/openldap:2.6.13"
     restart: "no"
     hostname: "ldap.oracle.local"
     ports:
@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile
       args:
         VENDOR_IMAGE_PREFIX: ${VENDOR_IMAGE_PREFIX}
-        BIND9_VERSION: "9.20"
+        BIND9_VERSION: "9.22"
     ports:
       - '9055:9055'
     restart: "no"
