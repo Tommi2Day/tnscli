@@ -1,4 +1,0 @@
-zone "rac.lan" {
-    type master;
-    file "/etc/bind/zones/rac.lan.zone";
-};

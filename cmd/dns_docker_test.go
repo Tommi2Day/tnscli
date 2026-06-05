@@ -20,7 +20,7 @@ const (
 	tnscliDNSTimeout    = 10
 	tnscliNetworkName   = "tnscli-dnsnetwork"
 	tnscliNetworkPrefix = "172.25.2"
-	tnscliRepoTag       = "9.20"
+	tnscliDNSRepoTag    = "9.21"
 	tnscliTestAddr      = racaddr
 )
 
@@ -29,7 +29,7 @@ var (
 	tnscliDNSContainer      *dockertest.Resource
 	tnscliDNSNetwork        *dockertest.Network
 	tnscliDNSNetworkCreated = false
-	tnscliDNSServer         = common.GetStringEnv("DNS_HOST", "")
+	tnscliDNSServer         = common.GetStringEnv("DNS_HOST", "127.0.0.1")
 	tnscliDNSPort           = 9055
 )
 
@@ -51,18 +51,22 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("docker network: %s", err)
 	}
+	fmt.Printf("DNS Container network setup completed\n")
 
 	container, err = buildAndRunContainer(pool)
 	if err != nil {
 		return container, fmt.Errorf("docker container: %s", err)
 	}
+	fmt.Printf("DNS Container started\n")
 	_ = container.Expire(120)
 	time.Sleep(10 * time.Second)
+
 	ip := validateContainerIP(container)
 	if ip == "" {
 		err = fmt.Errorf("could not get IP for Container")
 		return
 	}
+
 	out, _, e := common.ExecDockerCmd(container, []string{"/usr/bin/ss", "-anl"})
 	fmt.Printf("cmd out:%s\n", out)
 	if e != nil {
@@ -81,7 +85,7 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 func getContainerName() string {
 	name := os.Getenv("DBDNS_CONTAINER_NAME")
 	if name == "" {
-		name = "tnscli-bind9"
+		name = "tnscli-dns"
 	}
 	return name
 }
@@ -121,7 +125,7 @@ func buildAndRunContainer(pool *dockertest.Pool) (*dockertest.Resource, error) {
 	fmt.Printf("Try to build and start docker container %s\n", tnscliDNSContainerName)
 	buildArgs := []docker.BuildArg{
 		{Name: "VENDOR_IMAGE_PREFIX", Value: vendorImagePrefix},
-		{Name: "BIND9_VERSION", Value: tnscliRepoTag},
+		{Name: "BIND9_VERSION", Value: tnscliDNSRepoTag},
 	}
 
 	dockerContextDir := test.TestDir + "/docker/oracle-dns"
@@ -161,9 +165,9 @@ func waitForDNSServer(pool *dockertest.Pool) error {
 	if dh != "" {
 		fmt.Printf("Docker Host: %s\n", dh)
 	}
-	ns := os.Getenv("DB_HOST")
+	ns := os.Getenv("DNS_HOST")
 	if ns != "" {
-		fmt.Printf("DB_HOST variable was set to %s\n", ns)
+		fmt.Printf("DNS_HOST variable was set to %s\n", ns)
 	} else if dh != "" {
 		ns = dh
 	}
