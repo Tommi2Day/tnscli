@@ -17,11 +17,12 @@ import (
 )
 
 const (
-	sOK   = "ok"
-	sNew  = "new"
-	sMod  = "mod"
-	sDel  = "del"
-	sSkip = "skip"
+	sOK     = "ok"
+	sNew    = "new"
+	sMod    = "mod"
+	sDel    = "del"
+	sSkip   = "skip"
+	cmdLdap = "ldap"
 )
 
 // TWorkStatus structure to handover statistics
@@ -31,7 +32,7 @@ var inputReader = os.Stdin
 var (
 	// check represents the list command
 	ldapCmd = &cobra.Command{
-		Use:   "ldap",
+		Use:   cmdLdap,
 		Short: "LDAP TNS Entries",
 		Long:  `handle TNS entries stored in LDAP Server`,
 	}
@@ -362,11 +363,6 @@ func ClearLdapTns(lc *ldaplib.LdapConfigType, contextDN string) (ok int, fail in
 
 // WriteLdapTns writes a set of TNS entries to Ldap
 func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domain string, contextDN string) (TWorkStatus, error) {
-	var ldapstatus map[string]string
-	var ldapTNS dblib.TNSEntries
-	var tnsLow dblib.TNSEntries
-	var alias string
-	var err error
 	workStatus := make(TWorkStatus)
 	workStatus[sOK] = 0
 	workStatus[sMod] = 0
@@ -375,89 +371,131 @@ func WriteLdapTns(lc *ldaplib.LdapConfigType, tnsEntries dblib.TNSEntries, domai
 	workStatus[sSkip] = 0
 
 	log.Infof("Update LDAP Context %s with %d tnsnames.ora entries using domain %s", contextDN, len(tnsEntries), domain)
-	ldapTNS, ldapstatus, err = buildStatusMap(lc, tnsEntries, contextDN)
-	status := ""
+	ldapTNS, ldapstatus, err := buildStatusMap(lc, tnsEntries, contextDN)
+	if err != nil {
+		return workStatus, err
+	}
 
-	// sort candidates
+	sortedAlias := getSortedAliases(ldapstatus)
+	tnsLow := getLowercaseTNS(tnsEntries)
+
+	for _, alias := range sortedAlias {
+		err = processAlias(lc, contextDN, alias, ldapstatus[alias], ldapTNS, tnsLow, workStatus)
+		if err != nil {
+			log.Warnf("Error processing alias %s: %v", alias, err)
+		}
+	}
+
+	log.Infof("%d TNS entries unchanged,%d new written, %d modified, %d deleted and %d skipped because of errors",
+		workStatus[sOK], workStatus[sNew], workStatus[sMod], workStatus[sDel], workStatus[sSkip])
+	return workStatus, nil
+}
+
+func getSortedAliases(ldapstatus map[string]string) []string {
 	sortedAlias := make([]string, 0, len(ldapstatus))
 	for k := range ldapstatus {
 		sortedAlias = append(sortedAlias, k)
 	}
 	sort.Strings(sortedAlias)
+	return sortedAlias
+}
 
-	// align tns keys for comparing
-	tnsLow = make(dblib.TNSEntries, len(tnsEntries))
+func getLowercaseTNS(tnsEntries dblib.TNSEntries) dblib.TNSEntries {
+	tnsLow := make(dblib.TNSEntries, len(tnsEntries))
 	for _, v := range tnsEntries {
 		n := dropRe.ReplaceAllString(strings.ToLower(v.Name), "")
 		tnsLow[strings.ToLower(n)] = v
 	}
+	return tnsLow
+}
 
-	for _, alias = range sortedAlias {
-		status = ldapstatus[alias]
-		shortAlias := dropRe.ReplaceAllString(strings.ToLower(alias), "")
-		switch status {
-		case sOK:
-			log.Debugf("Alias %s unchanged", alias)
-			workStatus[sOK]++
-		case sNew:
-			tnsEntry, valid := tnsLow[shortAlias]
-			if !valid {
-				log.Warnf("Skip add invalid tns alias %s", shortAlias)
-				workStatus[sSkip]++
-				continue
-			}
-			err = dblib.AddLdapTNSEntry(lc, contextDN, shortAlias, tnsEntry.Desc)
-			if err != nil {
-				log.Warnf("Add %s failed: %v", shortAlias, err)
-				workStatus[sSkip]++
-				continue
-			}
-			workStatus[sNew]++
-			log.Infof("Alias %s added", shortAlias)
-		case sMod:
-			// delete and add
-			ldapEntry, valid := ldapTNS[alias]
-			if !valid {
-				log.Warnf("Skip modify invalid ldap alias %s", alias)
-				workStatus[sSkip]++
-				continue
-			}
-			dn := ldapEntry.Location
-			tnsEntry, valid := tnsLow[shortAlias]
-			if !valid {
-				log.Warnf("Skip modify invalid tns alias %s", alias)
-				workStatus[sSkip]++
-				continue
-			}
-			err = dblib.ModifyLdapTNSEntry(lc, dn, shortAlias, tnsEntry.Desc)
-			if err != nil {
-				log.Warnf("Modify %s failed: %v", shortAlias, err)
-				workStatus[sSkip]++
-			} else {
-				log.Infof("Alias %s modified", shortAlias)
-				workStatus[sMod]++
-			}
-		case "":
-			ldapEntry, valid := ldapTNS[alias]
-			if !valid {
-				log.Warnf("Skip delete invalid ldap alias %s", alias)
-				workStatus[sSkip]++
-				continue
-			}
-			dn := ldapEntry.Location
-			err = dblib.DeleteLdapTNSEntry(lc, dn, alias)
-			if err != nil {
-				log.Warnf("Delete %s failed: %v", alias, err)
-				workStatus[sSkip]++
-			} else {
-				log.Infof("Alias %s deleted", alias)
-				workStatus[sDel]++
-			}
-		}
+func processAlias(lc *ldaplib.LdapConfigType, contextDN, alias, status string, ldapTNS, tnsLow dblib.TNSEntries, workStatus TWorkStatus) error {
+	shortAlias := dropRe.ReplaceAllString(strings.ToLower(alias), "")
+
+	switch status {
+	case sOK:
+		log.Debugf("Alias %s unchanged", alias)
+		workStatus[sOK]++
+		return nil
+
+	case sNew:
+		return handleNewAlias(lc, contextDN, shortAlias, tnsLow, workStatus)
+
+	case sMod:
+		return handleModifiedAlias(lc, shortAlias, alias, ldapTNS, tnsLow, workStatus)
+
+	case "":
+		return handleDeletedAlias(lc, alias, ldapTNS, workStatus)
 	}
-	log.Infof("%d TNS entries unchanged,%d new written, %d modified, %d deleted and %d skipped because of errors",
-		workStatus[sOK], workStatus[sNew], workStatus[sMod], workStatus[sDel], workStatus[sSkip])
-	return workStatus, err
+
+	return nil
+}
+
+func handleNewAlias(lc *ldaplib.LdapConfigType, contextDN, shortAlias string, tnsLow dblib.TNSEntries, workStatus TWorkStatus) error {
+	tnsEntry, valid := tnsLow[shortAlias]
+	if !valid {
+		log.Warnf("Skip add invalid tns alias %s", shortAlias)
+		workStatus[sSkip]++
+		return nil
+	}
+
+	err := dblib.AddLdapTNSEntry(lc, contextDN, shortAlias, tnsEntry.Desc)
+	if err != nil {
+		log.Warnf("Add %s failed: %v", shortAlias, err)
+		workStatus[sSkip]++
+		return err
+	}
+
+	workStatus[sNew]++
+	log.Infof("Alias %s added", shortAlias)
+	return nil
+}
+
+func handleModifiedAlias(lc *ldaplib.LdapConfigType, shortAlias, alias string, ldapTNS, tnsLow dblib.TNSEntries, workStatus TWorkStatus) error {
+	ldapEntry, valid := ldapTNS[alias]
+	if !valid {
+		log.Warnf("Skip modify invalid ldap alias %s", alias)
+		workStatus[sSkip]++
+		return nil
+	}
+
+	tnsEntry, valid := tnsLow[shortAlias]
+	if !valid {
+		log.Warnf("Skip modify invalid tns alias %s", alias)
+		workStatus[sSkip]++
+		return nil
+	}
+
+	err := dblib.ModifyLdapTNSEntry(lc, ldapEntry.Location, shortAlias, tnsEntry.Desc)
+	if err != nil {
+		log.Warnf("Modify %s failed: %v", shortAlias, err)
+		workStatus[sSkip]++
+		return err
+	}
+
+	log.Infof("Alias %s modified", shortAlias)
+	workStatus[sMod]++
+	return nil
+}
+
+func handleDeletedAlias(lc *ldaplib.LdapConfigType, alias string, ldapTNS dblib.TNSEntries, workStatus TWorkStatus) error {
+	ldapEntry, valid := ldapTNS[alias]
+	if !valid {
+		log.Warnf("Skip delete invalid ldap alias %s", alias)
+		workStatus[sSkip]++
+		return nil
+	}
+
+	err := dblib.DeleteLdapTNSEntry(lc, ldapEntry.Location, alias)
+	if err != nil {
+		log.Warnf("Delete %s failed: %v", alias, err)
+		workStatus[sSkip]++
+		return err
+	}
+
+	log.Infof("Alias %s deleted", alias)
+	workStatus[sDel]++
+	return nil
 }
 
 // buildstatus creates ops task map to handle
