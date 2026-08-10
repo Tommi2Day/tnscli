@@ -89,6 +89,7 @@ const racinfoFile = "racinfo.ini"
 
 var dbUser = ""
 var dbPass = ""
+var walletPassword = ""
 var tnsKey = ""
 var timeout = 15
 var dbhostFlag = false
@@ -108,6 +109,8 @@ func init() {
 
 	checkCmd.PersistentFlags().StringVarP(&dbUser, "user", "u", dbUser, "User for real connect or set TNSCLI_USER")
 	checkCmd.PersistentFlags().StringVarP(&dbPass, "password", "p", dbPass, "Password for real connect or set TNSCLI_PASSWORD")
+	checkCmd.PersistentFlags().StringVarP(&walletPassword, "wallet-password", "", walletPassword,
+		"Password for a PKCS12 wallet (ewallet.p12) or set TNSCLI_WALLET_PASSWORD; not needed for auto-login wallets")
 	checkCmd.PersistentFlags().BoolVarP(&all, "all", "a", false, "check all entries")
 	checkCmd.PersistentFlags().IntVarP(&timeout, "timeout", "t", timeout, "timeout in sec")
 	checkCmd.Flags().BoolVarP(&dbhostFlag, "dbhost", "H", false, "print actual connected host:cdb:pdb")
@@ -325,6 +328,10 @@ func checkTns(_ *cobra.Command, args []string) (err error) {
 		dbPass = common.GetEnv("TNSCLI_PASSWORD", "")
 		log.Debug("use default db pass")
 	}
+	if walletPassword == "" {
+		walletPassword = common.GetEnv("TNSCLI_WALLET_PASSWORD", "")
+	}
+	dblib.TNSSSLconfig.WalletPassword = walletPassword
 
 	// do checks depending on mode
 	if all {
@@ -429,9 +436,6 @@ func testService(entry dblib.TNSEntry) (err error) {
 // CheckWithOracle try connecting to oracle with dummy creds to get an ORA error.
 // If this happens, the connection is working
 func CheckWithOracle(dbuser string, dbpass string, tnsDesc string, timeout int) (ok bool, elapsed time.Duration, hostval string, err error) {
-	urlOptions := map[string]string{
-		// "CONNECTION TIMEOUT": "3",
-	}
 	ok = false
 	if dbuser == "" {
 		dbuser = defaultUser
@@ -441,6 +445,7 @@ func CheckWithOracle(dbuser string, dbpass string, tnsDesc string, timeout int) 
 	}
 	// jdbc url needs spaces stripped
 	tnsDesc = strings.Join(strings.Fields(tnsDesc), "")
+	urlOptions := dblib.SSLConnectOptions(tnsDesc)
 	url := goora.BuildJDBC(dbuser, dbpass, tnsDesc, urlOptions)
 	log.Debugf("Try to connect %s@%s", dbuser, tnsDesc)
 	start := time.Now()
