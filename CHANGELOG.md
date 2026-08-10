@@ -1,5 +1,13 @@
 # Changelog tnscli
 
+## [v3.10.0 - 2026-08-10]
+### New
+- add tcps support for Oracle connections
+- add apk support
+### Changed
+- use dockertest v4
+- update dependencies
+
 ## [v3.9.10 - 2026-06-05]
 ### Changed
 - use Go 1.26

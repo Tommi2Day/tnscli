@@ -12,6 +12,7 @@ Small Oracle TNS Service and Connect Test Tool
 
 - connect to a given service using real connect method.
 - Uses given credentials or default to raise an ORA-1017 error
+- Connect via TCPS using a wallet/`sqlnet.ora`, the same way `sqlplus` does
 - List and search TNS entries from `tnsnames.ora` and LDAP
 - Check TNS service connectivity via TCP (and optionally a real database login)
 - Port check all addresses of a service, including RAC VIPs
@@ -27,6 +28,7 @@ Small Oracle TNS Service and Connect Test Tool
 - [Configuration](#configuration)
   - [DB test user](#db-test-user)
   - [RAC address info](#rac-address-info)
+  - [TCPS / Wallet connections](#tcps--wallet-connections)
 - [list — List TNS entries](#list--list-tns-entries)
 - [service check — Check TNS entries](#service-check--check-tns-entries)
 - [service portcheck — Port check](#service-portcheck--port-check)
@@ -46,11 +48,11 @@ Small Oracle TNS Service and Connect Test Tool
 
 ## Installation
 
-Download the latest release binaries from [GitLab](https://gitlab.intern.tdressler.net/goproj/tnscli/-/releases)
+Download the latest release binaries from [Github](https://github.com/tommi2day/tnscli/releases)
 or install with Go:
 
 ```sh
-go install gitlab.intern.tdressler.net/goproj/tnscli@latest
+go install github.com/tommi2day/tnscli@latest
 ```
 
 ---
@@ -125,6 +127,34 @@ RAC address details can be provided via DNS SRV records or a `racinfo.ini` file 
   vip3=vip3.rac.lan:1521
   ```
 
+### TCPS / Wallet connections
+
+`tnscli` resolves wallet and SSL settings from `sqlnet.ora` in the directory of the active `tnsnames.ora` (i.e. via `$TNS_ADMIN`), the same way `sqlplus` does. No extra flags are needed for a normal TCPS setup — just a TNS entry using `PROTOCOL=TCPS` and a `WALLET_LOCATION` in `sqlnet.ora`:
+
+```
+# tnsnames.ora
+XE.local=(DESCRIPTION=
+  (ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCPS)(HOST=dbhost.local)(PORT=2484)))
+  (CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XEPDB1)))
+```
+
+```
+# sqlnet.ora
+WALLET_LOCATION =
+  (SOURCE =
+    (METHOD = FILE)
+    (METHOD_DATA =
+      (DIRECTORY = /path/to/wallet)
+    )
+  )
+SSL_SERVER_DN_MATCH = YES
+```
+
+- Auto-login wallets (`cwallet.sso`, created e.g. with `orapki wallet create -auto_login`) need no password — matches typical production setups.
+- Password-protected PKCS12 wallets (`ewallet.p12`) need `--wallet-password` on `service check`, or set `TNSCLI_WALLET_PASSWORD`.
+- `SSL_SERVER_DN_MATCH` in `sqlnet.ora` controls certificate hostname verification, same meaning as in real `sqlnet.ora`.
+- `service info jdbc` includes `WALLET_LOCATION` in the printed JDBC URL whenever a wallet is configured.
+
 ---
 
 ## list — List TNS entries
@@ -169,6 +199,7 @@ Performs a real TCP connect (and optionally a database login) to verify a TNS en
 | `--all` / `-a` | Check all entries in the TNS file |
 | `--user` / `-u` | Username for real connect (or set `TNSCLI_USER`) |
 | `--password` / `-p` | Password for real connect (or set `TNSCLI_PASSWORD`) |
+| `--wallet-password` | Password for a PKCS12 wallet (`ewallet.p12`), or set `TNSCLI_WALLET_PASSWORD`; not needed for auto-login wallets |
 | `--timeout` / `-t` | Connect timeout in seconds (default 15) |
 | `--dbhost` / `-H` | Print the actual connected host, CDB, and PDB from `sys_context` |
 
@@ -192,6 +223,14 @@ tnscli service check -s XEPDB1.local -H -A test/testdata
 
 # Check all entries in a file
 tnscli service check --all -f test/testdata/connect.ora
+
+# Check a TCPS entry using WALLET_LOCATION from sqlnet.ora
+# (see "TCPS / Wallet connections" above)
+tnscli service check -s xe.local -A /path/to/tns_admin
+
+# Check a TCPS entry using a password-protected PKCS12 wallet
+tnscli service check -s xe.local -A /path/to/tns_admin \
+  --wallet-password "<WalletPassword>"
 ```
 
 ---
@@ -285,6 +324,10 @@ Prints the JDBC thin connection string for a service.
 ```sh
 tnscli service info jdbc -s xe -A test/testdata/
 # jdbc:oracle:thin:@(DESCRIPTION=(...))
+
+# with a WALLET_LOCATION configured in sqlnet.ora, it is appended automatically
+tnscli service info jdbc -s xe.local -A /path/to/tns_admin
+# jdbc:oracle:thin:@(DESCRIPTION=(...))?WALLET_LOCATION=/path/to/wallet
 ```
 
 ### service info tns — Print TNS entry
