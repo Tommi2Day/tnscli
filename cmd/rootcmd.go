@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -142,6 +143,10 @@ func initConfig() {
 	if filename == "" {
 		filename = path.Join(tnsAdmin, "tnsnames.ora")
 	}
+
+	// load wallet/SSL settings from sqlnet.ora in the directory of the active
+	// tnsnames.ora, the same way sqlplus resolves them via TNS_ADMIN
+	dblib.LoadSSLConfig(filepath.Dir(filename))
 }
 
 // processConfig reads in config file and ENV variables if set.
