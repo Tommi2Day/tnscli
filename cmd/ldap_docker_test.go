@@ -1,17 +1,19 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/tommi2day/gomodules/common"
-	"github.com/tommi2day/gomodules/ldaplib"
+	"github.com/ory/dockertest/v4"
 	"github.com/tommi2day/tnscli/test"
 
+	"github.com/tommi2day/gomodules/common"
+	"github.com/tommi2day/gomodules/ldaplib"
+
 	"github.com/go-ldap/ldap/v3"
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
+	dockercontainer "github.com/moby/moby/api/types/container"
 )
 
 const Ldaprepo = "docker.io/cleanstart/openldap"
@@ -19,10 +21,10 @@ const LdaprepoTag = "2.6.13"
 const LdapcontainerTimeout = 120
 
 var TnsLdapcontainerName string
-var TnsLdapContainer *dockertest.Resource
+var TnsLdapContainer dockertest.ClosableResource
 
 // prepareContainer create an OpenLdap Docker Container
-func prepareTnsLdapContainer() (container *dockertest.Resource, err error) {
+func prepareTnsLdapContainer() (container dockertest.ClosableResource, err error) {
 	if os.Getenv("SKIP_LDAP") != "" {
 		err = fmt.Errorf("skipping LDAP Container in CI environment")
 		return
@@ -31,7 +33,7 @@ func prepareTnsLdapContainer() (container *dockertest.Resource, err error) {
 	if TnsLdapcontainerName == "" {
 		TnsLdapcontainerName = "tnscli-ldap"
 	}
-	var pool *dockertest.Pool
+	var pool dockertest.ClosablePool
 	pool, err = common.GetDockerPool()
 	if err != nil || pool == nil {
 		return
@@ -40,35 +42,34 @@ func prepareTnsLdapContainer() (container *dockertest.Resource, err error) {
 	repoString := vendorImagePrefix + Ldaprepo
 
 	fmt.Printf("Try to start docker container for %s:%s\n", repoString, LdaprepoTag)
-	container, err = pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: repoString,
-		Tag:        LdaprepoTag,
-		Mounts: []string{
+	container, err = pool.Run(context.Background(), repoString,
+		dockertest.WithTag(LdaprepoTag),
+		dockertest.WithMounts([]string{
 			test.TestDir + "/docker/oracle-ldap/certs:/certs:ro",
 			// test.TestDir + "/docker/oracle-ldap/schema:/schema:ro",
 			test.TestDir + "/docker/oracle-ldap/ldif:/ldif:ro",
 			test.TestDir + "/docker/oracle-ldap/etc/slapd.conf:/etc/openldap/slapd.conf:ro",
-		},
-		Hostname: TnsLdapcontainerName,
-		Name:     TnsLdapcontainerName,
-	}, func(config *docker.HostConfig) {
-		// set AutoRemove to true so that stopped container goes away by itself
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
-	})
+		}),
+		dockertest.WithHostname(TnsLdapcontainerName),
+		dockertest.WithName(TnsLdapcontainerName),
+		dockertest.WithHostConfig(func(config *dockercontainer.HostConfig) {
+			// set AutoRemove to true so that stopped container goes away by itself
+			config.AutoRemove = true
+			config.RestartPolicy = dockercontainer.RestartPolicy{Name: restartPolicyNo}
+		}),
+	)
 
 	if err != nil || container == nil {
 		err = fmt.Errorf("error starting ldap docker container: %v", err)
 		return
 	}
 
-	pool.MaxWait = LdapcontainerTimeout * time.Second
 	myhost, myport := common.GetContainerHostAndPort(container, "389/tcp")
 	dialURL := fmt.Sprintf("ldap://%s:%d", myhost, myport)
 	fmt.Printf("Wait to successfully connect to Ldap with %s (max %ds)...\n", dialURL, LdapcontainerTimeout)
 	start := time.Now()
 	var l *ldap.Conn
-	if err = pool.Retry(func() error {
+	if err = pool.Retry(context.Background(), LdapcontainerTimeout*time.Second, func() error {
 		l, err = ldap.DialURL(dialURL)
 		return err
 	}); err != nil {

@@ -1,16 +1,19 @@
 package cmd
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"net/netip"
 	"os"
 	"time"
 
+	"github.com/ory/dockertest/v4"
+	"github.com/tommi2day/gomodules/common"
 	"github.com/tommi2day/tnscli/test"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
-	"github.com/tommi2day/gomodules/common"
+	dockercontainer "github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
 )
 
 const (
@@ -33,7 +36,7 @@ var (
 )
 
 // prepareContainer create an Oracle Docker Container
-func prepareContainer() (container *dockertest.Resource, err error) {
+func prepareContainer() (container dockertest.ClosableResource, err error) {
 	if os.Getenv("SKIP_ORACLE") != "" {
 		err = fmt.Errorf("skipping ORACLE Container in CI environment")
 		return
@@ -42,7 +45,7 @@ func prepareContainer() (container *dockertest.Resource, err error) {
 	if dbContainerName == "" {
 		dbContainerName = "tnscli-oracledb"
 	}
-	var pool *dockertest.Pool
+	var pool dockertest.ClosablePool
 	pool, err = common.GetDockerPool()
 	if err != nil {
 		return
@@ -51,48 +54,46 @@ func prepareContainer() (container *dockertest.Resource, err error) {
 	repoString := vendorImagePrefix + dbRepo
 
 	fmt.Printf("Try to start docker container for %s:%s\n", repoString, dbRepoTag)
-	container, err = pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: repoString,
-		Tag:        dbRepoTag,
-
-		Hostname: dbContainerName,
-		Name:     dbContainerName,
-		Env: []string{
+	container, err = pool.Run(context.Background(), repoString,
+		dockertest.WithTag(dbRepoTag),
+		dockertest.WithHostname(dbContainerName),
+		dockertest.WithName(dbContainerName),
+		dockertest.WithEnv([]string{
 			"ORACLE_PASSWORD=" + dbPassword,
-		},
-		ExposedPorts: []string{"1521"},
+		}),
 		// need fixed mapping here
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"1521": {
-				{HostIP: "0.0.0.0", HostPort: dbPort},
+		dockertest.WithPortBindings(network.PortMap{
+			network.MustParsePort("1521/tcp"): {
+				{HostIP: netip.IPv4Unspecified(), HostPort: dbPort},
 			},
-		},
-		Mounts: []string{
+		}),
+		dockertest.WithMounts([]string{
 			test.TestDir + "/docker/oracle-db:/container-entrypoint-initdb.d:ro",
-		},
-	}, func(config *docker.HostConfig) {
-		// set AutoRemove to true so that stopped container goes away by itself
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
-	})
+		}),
+		dockertest.WithHostConfig(func(config *dockercontainer.HostConfig) {
+			// set AutoRemove to true so that stopped container goes away by itself
+			config.AutoRemove = true
+			config.RestartPolicy = dockercontainer.RestartPolicy{Name: restartPolicyNo}
+		}),
+	)
 
 	if err != nil {
 		err = fmt.Errorf("error starting DB docker %s container: %v", dbContainerName, err)
 		if container != nil {
-			_ = pool.Purge(container)
+			common.DestroyDockerContainer(container)
 		}
 		return
 	}
 	err = WaitForOracle(pool)
 	if err != nil {
-		_ = pool.Purge(container)
+		common.DestroyDockerContainer(container)
 		return
 	}
 	return
 }
 
 // WaitForOracle waits to successfully connect to Oracle
-func WaitForOracle(pool *dockertest.Pool) (err error) {
+func WaitForOracle(pool dockertest.Pool) (err error) {
 	if os.Getenv("SKIP_ORACLE") != "" {
 		err = fmt.Errorf("skipping ORACLE Container in CI environment")
 		return
@@ -105,11 +106,10 @@ func WaitForOracle(pool *dockertest.Pool) (err error) {
 		}
 	}
 
-	pool.MaxWait = dbContainerTimeout * time.Second
 	target = fmt.Sprintf("oracle://%s:%s@%s:%s/%s", dbSystemUser, dbPassword, dbHost, dbPort, dbSystemService)
 	fmt.Printf("Wait to successfully init db with %s (max %ds)...\n", target, dbContainerTimeout)
 	start := time.Now()
-	if err = pool.Retry(func() error {
+	if err = pool.Retry(context.Background(), dbContainerTimeout*time.Second, func() error {
 		var err error
 		var db *sql.DB
 		db, err = sql.Open("oracle", target)

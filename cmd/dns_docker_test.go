@@ -1,72 +1,71 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"time"
 
-	"github.com/ory/dockertest/v3"
-
+	"github.com/ory/dockertest/v4"
 	"github.com/tommi2day/tnscli/test"
 
 	"github.com/tommi2day/gomodules/common"
 	"github.com/tommi2day/gomodules/netlib"
 
-	"github.com/ory/dockertest/v3/docker"
+	dockercontainer "github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
 )
 
 const (
 	tnscliDNSTimeout    = 10
 	tnscliNetworkName   = "tnscli-dnsnetwork"
 	tnscliNetworkPrefix = "172.25.2"
-	tnscliDNSRepoTag    = "9.21"
+	tnscliRepoTag       = "9.21"
 	tnscliTestAddr      = racaddr
 )
 
 var (
-	tnscliDNSContainerName  string
-	tnscliDNSContainer      *dockertest.Resource
-	tnscliDNSNetwork        *dockertest.Network
-	tnscliDNSNetworkCreated = false
-	tnscliDNSServer         = common.GetStringEnv("DNS_HOST", "127.0.0.1")
-	tnscliDNSPort           = 9055
+	tnscliDNSContainerName string
+	tnscliDNSContainer     dockertest.ClosableResource
+	tnscliDNSNetwork       dockertest.ClosableNetwork
+	tnscliDNSServer        = common.GetStringEnv("DNS_HOST", "127.0.0.1")
+	tnscliDNSPort          = 9055
 )
 
 // prepareDBlibDNSContainer create a Bind9 Docker Container
-func prepareDNSContainer() (container *dockertest.Resource, err error) {
+func prepareDNSContainer() (container dockertest.ClosableResource, err error) {
 	if os.Getenv("SKIP_DNS") != "" {
 		return nil, fmt.Errorf("skipping DB DNS Container in CI environment")
 	}
 
 	fmt.Printf("Try to prepare DB DNS Container on %s\n", tnscliDNSServer)
 	tnscliDNSContainerName = getContainerName()
-	// use versioned docker pool because of api error client version to old
-	pool, err := common.GetVersionedDockerPool("")
+	pool, err := common.GetDockerPool()
 	if err != nil {
 		return nil, fmt.Errorf("pool: %s", err)
 	}
 
-	err = setupNetwork(pool)
+	tnscliDNSNetwork, err = common.CreateNetworkWithSubnet(pool, tnscliNetworkName, tnscliNetworkPrefix+".0/24", tnscliNetworkPrefix+".1")
 	if err != nil {
 		return nil, fmt.Errorf("docker network: %s", err)
 	}
-	fmt.Printf("DNS Container network setup completed\n")
 
 	container, err = buildAndRunContainer(pool)
 	if err != nil {
 		return container, fmt.Errorf("docker container: %s", err)
 	}
-	fmt.Printf("DNS Container started\n")
-	_ = container.Expire(120)
+	err = container.ConnectToNetwork(context.Background(), tnscliDNSNetwork)
+	if err != nil {
+		return container, fmt.Errorf("connect to network: %s", err)
+	}
 	time.Sleep(10 * time.Second)
-
 	ip := validateContainerIP(container)
 	if ip == "" {
 		err = fmt.Errorf("could not get IP for Container")
 		return
 	}
-
 	out, _, e := common.ExecDockerCmd(container, []string{"/usr/bin/ss", "-anl"})
 	fmt.Printf("cmd out:%s\n", out)
 	if e != nil {
@@ -85,89 +84,59 @@ func prepareDNSContainer() (container *dockertest.Resource, err error) {
 func getContainerName() string {
 	name := os.Getenv("DBDNS_CONTAINER_NAME")
 	if name == "" {
-		name = "tnscli-dns"
+		name = "tnscli-bind9"
 	}
 	return name
 }
 
-func setupNetwork(pool *dockertest.Pool) error {
-	networks, err := pool.NetworksByName(tnscliNetworkName)
-	if err != nil || len(networks) == 0 {
-		return createNetwork(pool)
-	}
-	tnscliDNSNetwork = &networks[0]
-	return nil
-}
-
-func createNetwork(pool *dockertest.Pool) error {
-	var err error
-	tnscliDNSNetwork, err = pool.CreateNetwork(tnscliNetworkName, func(options *docker.CreateNetworkOptions) {
-		options.Name = tnscliNetworkName
-		options.CheckDuplicate = true
-		options.IPAM = &docker.IPAMOptions{
-			Driver: "default",
-			Config: []docker.IPAMConfig{{
-				Subnet:  tnscliNetworkPrefix + ".0/24",
-				Gateway: tnscliNetworkPrefix + ".1",
-			}},
-		}
-		options.EnableIPv6 = false
-	})
-	if err != nil {
-		return fmt.Errorf("could not create Network: %s:%s", tnscliNetworkName, err)
-	}
-	tnscliDNSNetworkCreated = true
-	return nil
-}
-
-func buildAndRunContainer(pool *dockertest.Pool) (*dockertest.Resource, error) {
+func buildAndRunContainer(pool dockertest.Pool) (dockertest.ClosableResource, error) {
 	vendorImagePrefix := os.Getenv("VENDOR_IMAGE_PREFIX")
 	fmt.Printf("Try to build and start docker container %s\n", tnscliDNSContainerName)
-	buildArgs := []docker.BuildArg{
-		{Name: "VENDOR_IMAGE_PREFIX", Value: vendorImagePrefix},
-		{Name: "BIND9_VERSION", Value: tnscliDNSRepoTag},
-	}
 
 	dockerContextDir := test.TestDir + "/docker/oracle-dns"
-
+	imageName := fmt.Sprintf("tnscli-bind9:%s", tnscliRepoTag)
 	port := fmt.Sprintf("%d", tnscliDNSPort)
-	return pool.BuildAndRunWithBuildOptions(
+	bindVersion := tnscliRepoTag
+
+	return pool.BuildAndRun(context.Background(), imageName,
 		&dockertest.BuildOptions{
-			BuildArgs:  buildArgs,
+			BuildArgs: map[string]*string{
+				"VENDOR_IMAGE_PREFIX": &vendorImagePrefix,
+				"BIND9_VERSION":       &bindVersion,
+			},
 			ContextDir: dockerContextDir,
 			Dockerfile: "Dockerfile",
 		},
-		&dockertest.RunOptions{
-			Hostname: tnscliDNSContainerName,
-			Name:     tnscliDNSContainerName,
-			Networks: []*dockertest.Network{tnscliDNSNetwork},
-			// need fixed mapping here
-			PortBindings: map[docker.Port][]docker.PortBinding{
-				"9055/tcp": {
-					{HostIP: "0.0.0.0", HostPort: port},
-				},
+		dockertest.WithHostname(tnscliDNSContainerName),
+		dockertest.WithName(tnscliDNSContainerName),
+		// need fixed mapping here
+		dockertest.WithPortBindings(network.PortMap{
+			network.MustParsePort("9055/tcp"): {
+				{HostIP: netip.IPv4Unspecified(), HostPort: port},
 			},
-			CapAdd: []string{"NET_ADMIN"},
-		}, func(config *docker.HostConfig) {
+		}),
+		dockertest.WithHostConfig(func(config *dockercontainer.HostConfig) {
+			config.CapAdd = []string{"NET_ADMIN"}
 			config.AutoRemove = false
-			config.RestartPolicy = docker.RestartPolicy{Name: "no"}
-		})
+			config.RestartPolicy = dockercontainer.RestartPolicy{Name: restartPolicyNo}
+		}),
+	)
 }
 
-func validateContainerIP(container *dockertest.Resource) string {
+func validateContainerIP(container dockertest.ClosableResource) string {
 	ip := container.GetIPInNetwork(tnscliDNSNetwork)
 	fmt.Printf("DB DNS Container IP: %s\n", ip)
 	return ip
 }
 
-func waitForDNSServer(pool *dockertest.Pool) error {
-	dh := common.GetDockerHost(pool)
+func waitForDNSServer(pool dockertest.Pool) error {
+	dh := common.GetDockerHost(pool.Client().DaemonHost())
 	if dh != "" {
 		fmt.Printf("Docker Host: %s\n", dh)
 	}
-	ns := os.Getenv("DNS_HOST")
+	ns := os.Getenv("DB_HOST")
 	if ns != "" {
-		fmt.Printf("DNS_HOST variable was set to %s\n", ns)
+		fmt.Printf("DB_HOST variable was set to %s\n", ns)
 	} else if dh != "" {
 		ns = dh
 	}
@@ -185,9 +154,8 @@ func waitForDNSServer(pool *dockertest.Pool) error {
 	ip := lips[0]
 	tnscliDNSServer = ns
 	fmt.Printf("DNS Host %s  IP resolved as %s\n", tnscliDNSServer, ip)
-	pool.MaxWait = tnscliDNSTimeout * time.Second
 	start := time.Now()
-	err = pool.Retry(func() error {
+	err = pool.Retry(context.Background(), tnscliDNSTimeout*time.Second, func() error {
 		c, e := net.Dial("tcp", net.JoinHostPort(tnscliDNSServer, fmt.Sprintf("%d", tnscliDNSPort)))
 		if e != nil {
 			fmt.Printf("Err:%s\n", e)
@@ -221,12 +189,12 @@ func testDNSResolution() error {
 	return nil
 }
 
-func destroyDNSContainer(container *dockertest.Resource) {
+func destroyDNSContainer(container dockertest.ClosableResource) {
 	if container != nil {
-		_ = container.Close()
+		common.DestroyDockerContainer(container)
 	}
 
-	if tnscliDNSNetworkCreated && tnscliDNSNetwork != nil {
-		_ = tnscliDNSNetwork.Close()
+	if tnscliDNSNetwork != nil {
+		_ = tnscliDNSNetwork.Close(context.Background())
 	}
 }
