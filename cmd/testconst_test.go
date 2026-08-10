@@ -6,5 +6,9 @@ const (
 	flagFilename = "--filename"
 	flagService  = "--service"
 	flagNodns    = "--nodns"
+	flagUser     = "--user"
+	flagPassword = "--password"
 	constXE      = "XE"
+
+	restartPolicyNo = "no"
 )
