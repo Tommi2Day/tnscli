@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/netip"
 	"os"
 	"path"
+	"strconv"
 	"testing"
 	"time"
 
@@ -28,8 +28,6 @@ import (
 // fast enough to fit go test's default 10-minute binary-wide deadline.
 const (
 	tcpsRepoTag = "23.26.2-full-faststart"
-	tcpsDBPort  = "21525"
-	tcpsPort    = "21526"
 	// keep this safely under go test's default 10-minute (600s) overall
 	// deadline (not equal to it - that races the test binary's own alarm) so
 	// a genuinely stuck container fails with a clear message here instead of
@@ -37,7 +35,16 @@ const (
 	tcpsContainerTimeout = 480
 )
 
-var tcpsContainerName string
+var (
+	tcpsContainerName string
+	// tcpsDBPort/tcpsPort are placeholders until prepareTCPSContainer
+	// overwrites them with the container's real, dynamically assigned host
+	// ports: fixed host-port publishing does not work reliably on some CI
+	// runners even though the container itself comes up fine, so random
+	// ports are requested instead (mirrors what the working LDAP test does)
+	tcpsDBPort = "21525"
+	tcpsPort   = "21526"
+)
 
 // prepareTCPSContainer starts an Oracle "-full" container whose
 // container-entrypoint-initdb.d scripts (test/docker/oracle-db-tcps) create a
@@ -69,13 +76,14 @@ func prepareTCPSContainer(walletDir string) (container dockertest.ClosableResour
 		dockertest.WithEnv([]string{
 			"ORACLE_PASSWORD=" + dbPassword,
 		}),
-		dockertest.WithPortBindings(network.PortMap{
-			network.MustParsePort("1521/tcp"): {
-				{HostIP: netip.IPv4Unspecified(), HostPort: tcpsDBPort},
-			},
-			network.MustParsePort("2484/tcp"): {
-				{HostIP: netip.IPv4Unspecified(), HostPort: tcpsPort},
-			},
+		// gvenzl/oracle-free declares no EXPOSE itself, so PublishAllPorts
+		// (on by default) has nothing to auto-publish unless we declare the
+		// ports here explicitly
+		dockertest.WithContainerConfig(func(c *dockercontainer.Config) {
+			c.ExposedPorts = network.PortSet{
+				network.MustParsePort("1521/tcp"): {},
+				network.MustParsePort("2484/tcp"): {},
+			}
 		}),
 		dockertest.WithMounts([]string{
 			test.TestDir + "/docker/oracle-db-tcps:/container-entrypoint-initdb.d:ro",
@@ -93,6 +101,18 @@ func prepareTCPSContainer(walletDir string) (container dockertest.ClosableResour
 		}
 		return
 	}
+
+	discoveredHost, discoveredDBPort := common.GetContainerHostAndPort(container, "1521/tcp")
+	_, discoveredTCPSPort := common.GetContainerHostAndPort(container, "2484/tcp")
+	if discoveredDBPort == 0 || discoveredTCPSPort == 0 {
+		err = fmt.Errorf("could not determine published host ports for TCPS DB docker %s container", tcpsContainerName)
+		diagnosePortBinding(container, "1521")
+		common.DestroyDockerContainer(container)
+		return
+	}
+	dbHost = discoveredHost
+	tcpsDBPort = strconv.Itoa(discoveredDBPort)
+	tcpsPort = strconv.Itoa(discoveredTCPSPort)
 
 	tcpsTarget := fmt.Sprintf("oracle://%s:%s@%s:%s/%s", dbSystemUser, dbPassword, dbHost, tcpsDBPort, dbSystemService)
 	fmt.Printf("Wait to successfully init TCPS db with %s (max %ds)...\n", tcpsTarget, tcpsContainerTimeout)
@@ -162,7 +182,14 @@ func TestOracleTCPSConnect(t *testing.T) {
 	// container's oracle user (a different uid) can write the wallet here
 	require.NoErrorf(t, os.Chmod(walletDir, 0777), "chmod wallet dir failed")
 
+	oracleContainer, err := prepareTCPSContainer(walletDir)
+	require.NoErrorf(t, err, "prepare TCPS Oracle Container failed")
+	require.NotNil(t, oracleContainer, "Prepare failed")
+	defer common.DestroyDockerContainer(oracleContainer)
+
 	tcpsAlias := "TCPSTEST.local"
+	// dbHost/tcpsPort now hold the container's actual, dynamically assigned
+	// address, discovered inside prepareTCPSContainer above
 	tcpsDesc := fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCPS)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=FREEPDB1)))", dbHost, tcpsPort)
 
 	// no sqlnet.ora here: used to prove the check fails without a wallet
@@ -176,11 +203,6 @@ func TestOracleTCPSConnect(t *testing.T) {
 	require.NoErrorf(t, common.WriteStringToFile(path.Join(tcpsDir, "sqlnet.ora"), sqlnetContent), "write sqlnet.ora failed")
 	tnsFilename := path.Join(tcpsDir, "tcps_connect.ora")
 	require.NoErrorf(t, common.WriteStringToFile(tnsFilename, tcpsAlias+"="+tcpsDesc), "write tnsnames failed")
-
-	oracleContainer, err := prepareTCPSContainer(walletDir)
-	require.NoErrorf(t, err, "prepare TCPS Oracle Container failed")
-	require.NotNil(t, oracleContainer, "Prepare failed")
-	defer common.DestroyDockerContainer(oracleContainer)
 
 	t.Run("CMD Check TCPS without wallet fails", func(t *testing.T) {
 		args := []string{

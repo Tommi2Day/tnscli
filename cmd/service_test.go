@@ -13,6 +13,10 @@ import (
 	"github.com/tommi2day/gomodules/dblib"
 )
 
+// xetest is a placeholder TNS descriptor for racinfo_test.go, which only
+// needs syntactically valid, non-connecting TNS content; TestOracleConnect
+// below shadows this with its own descriptor built from the live container's
+// dynamically assigned port.
 var xetest = fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=FREEPDB1)))", dbHost, dbPort)
 
 const xealias = "FREE.local"
@@ -22,8 +26,18 @@ func TestOracleConnect(t *testing.T) {
 		t.Skip("Skipping ORACLE testing in CI environment")
 	}
 
+	dbContainer, err := prepareContainer()
+	require.NoErrorf(t, err, "prepare Oracle Container failed")
+	require.NotNil(t, dbContainer, "Prepare failed")
+	defer common.DestroyDockerContainer(dbContainer)
+
 	const toalias = "TOTEST.local"
 	const totest = "(DESCRIPTION=((TRANSPORT_CONNECT_TIMEOUT=3)(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=8.8.8.7)(PORT=1521)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=totest.local)))"
+	// dbHost/dbPort now hold the container's actual, dynamically assigned
+	// address, discovered inside prepareContainer above; shadows the
+	// package-level xetest (which racinfo_test.go still uses as inert,
+	// non-connecting TNS content and keeps its placeholder value)
+	xetest := fmt.Sprintf("(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=%s)(PORT=%s)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=FREEPDB1)))", dbHost, dbPort)
 	tnsFilename := tnsAdminDir + "/connect.ora"
 	_ = common.WriteStringToFile(tnsFilename, xealias+"="+xetest+"\n\n"+toalias+"="+totest)
 	t.Logf("load from %s", tnsFilename)
@@ -42,10 +56,6 @@ func TestOracleConnect(t *testing.T) {
 	require.True(t, found, "Alias not found")
 	desc := common.RemoveSpace(e.Desc)
 	t.Logf("Desc:%s", desc)
-	dbContainer, err := prepareContainer()
-	require.NoErrorf(t, err, "prepare Oracle Container failed")
-	require.NotNil(t, dbContainer, "Prepare failed")
-	defer common.DestroyDockerContainer(dbContainer)
 
 	t.Run("Direct connect", func(t *testing.T) {
 		var db *sql.DB

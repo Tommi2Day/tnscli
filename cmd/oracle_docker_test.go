@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net"
-	"net/netip"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/ory/dockertest/v4"
@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	dbPort             = "21521"
 	dbRepo             = "docker.io/gvenzl/oracle-free"
 	dbRepoTag          = "23.26.2-slim"
 	dbContainerTimeout = 600
@@ -33,7 +32,13 @@ const (
 var (
 	dbContainerName string
 	dbHost          = common.GetEnv("DB_HOST", "127.0.0.1")
-	target          string
+	// dbPort is a placeholder until prepareContainer overwrites it with the
+	// container's real, dynamically assigned host port: fixed host-port
+	// publishing does not work reliably on some CI runners even though the
+	// container itself comes up fine, so a random port is requested instead
+	// (mirrors what the working LDAP test already does)
+	dbPort = "21521"
+	target string
 )
 
 // prepareContainer create an Oracle Docker Container
@@ -62,11 +67,13 @@ func prepareContainer() (container dockertest.ClosableResource, err error) {
 		dockertest.WithEnv([]string{
 			"ORACLE_PASSWORD=" + dbPassword,
 		}),
-		// need fixed mapping here
-		dockertest.WithPortBindings(network.PortMap{
-			network.MustParsePort("1521/tcp"): {
-				{HostIP: netip.IPv4Unspecified(), HostPort: dbPort},
-			},
+		// gvenzl/oracle-free declares no EXPOSE itself, so PublishAllPorts
+		// (on by default) has nothing to auto-publish unless we declare the
+		// port here explicitly
+		dockertest.WithContainerConfig(func(c *dockercontainer.Config) {
+			c.ExposedPorts = network.PortSet{
+				network.MustParsePort("1521/tcp"): {},
+			}
 		}),
 		dockertest.WithMounts([]string{
 			test.TestDir + "/docker/oracle-db:/container-entrypoint-initdb.d:ro",
@@ -85,6 +92,17 @@ func prepareContainer() (container dockertest.ClosableResource, err error) {
 		}
 		return
 	}
+
+	host, port := common.GetContainerHostAndPort(container, "1521/tcp")
+	if port == 0 {
+		err = fmt.Errorf("could not determine published host port for DB docker %s container", dbContainerName)
+		diagnosePortBinding(container, "1521")
+		common.DestroyDockerContainer(container)
+		return
+	}
+	dbHost = host
+	dbPort = strconv.Itoa(port)
+
 	err = WaitForOracle(pool)
 	if err != nil {
 		diagnosePortBinding(container, "1521")
