@@ -26,9 +26,42 @@ jobs:
           SKIP_COMMIT: true
           # github cannot handle custom resolvers, so skip dns tests
           SKIP_DNS: true
-        run: go test -v -timeout=25m ./...  -coverprofile=coverage.txt -covermode=atomic
+          # TCPS uses a much bigger "-full-faststart" Oracle image and runs
+          # in its own job/runner (see test-tcps) so it doesn't compete for
+          # disk/network with the other docker-based tests in this job
+          SKIP_ORACLE_TCPS: true
+        run: go test -v -timeout=15m ./...  -coverprofile=coverage.txt -covermode=atomic
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  test-tcps:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+        ports:
+          - 2375:2375
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Install dependencies
+        run: |
+          go mod tidy
+          go mod vendor
+      - name: Test TCPS
+        env:
+          SKIP_COMMIT: true
+          SKIP_DNS: true
+        run: go test -v -timeout=15m -run '^TestOracleTCPSConnect$' ./cmd -coverprofile=coverage-tcps.txt -covermode=atomic
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage-tcps.txt
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   lint:

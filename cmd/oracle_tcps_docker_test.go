@@ -45,8 +45,8 @@ var tcpsContainerName string
 // then copy that wallet into walletDir (bind-mounted at /client-wallet) so
 // tnscli can use it as WALLET_LOCATION exactly like a real client would.
 func prepareTCPSContainer(walletDir string) (container dockertest.ClosableResource, err error) {
-	if os.Getenv("SKIP_ORACLE") != "" {
-		err = fmt.Errorf("skipping ORACLE Container in CI environment")
+	if os.Getenv("SKIP_ORACLE") != "" || os.Getenv("SKIP_ORACLE_TCPS") != "" {
+		err = fmt.Errorf("skipping ORACLE TCPS Container in CI environment")
 		return
 	}
 	tcpsContainerName = os.Getenv("TCPS_CONTAINER_NAME")
@@ -136,8 +136,8 @@ func tcpsDBReady(target string) error {
 // entry with PROTOCOL=TCPS plus WALLET_LOCATION in sqlnet.ora, no password
 // needed since the wallet is auto-login (matches production practice).
 func TestOracleTCPSConnect(t *testing.T) {
-	if os.Getenv("SKIP_ORACLE") != "" {
-		t.Skip("Skipping ORACLE testing in CI environment")
+	if os.Getenv("SKIP_ORACLE") != "" || os.Getenv("SKIP_ORACLE_TCPS") != "" {
+		t.Skip("Skipping ORACLE TCPS testing in CI environment")
 	}
 	test.InitTestDirs()
 
