@@ -86,10 +86,29 @@ func prepareContainer() (container dockertest.ClosableResource, err error) {
 	}
 	err = WaitForOracle(pool)
 	if err != nil {
+		printContainerLogs(container)
 		common.DestroyDockerContainer(container)
 		return
 	}
 	return
+}
+
+// printContainerLogs prints a container's stdout/stderr so a container that
+// never becomes reachable (e.g. crashes right after start) is diagnosable
+// from CI output instead of surfacing only as an opaque connection-refused
+// or timeout error
+func printContainerLogs(container dockertest.ClosableResource) {
+	if container == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	stdout, stderr, err := container.Logs(ctx)
+	if err != nil {
+		fmt.Printf("could not fetch container logs: %v\n", err)
+		return
+	}
+	fmt.Printf("--- container stdout ---\n%s\n--- container stderr ---\n%s\n--- end container logs ---\n", stdout, stderr)
 }
 
 // WaitForOracle waits to successfully connect to Oracle

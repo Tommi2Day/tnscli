@@ -109,6 +109,7 @@ func prepareTCPSContainer(walletDir string) (container dockertest.ClosableResour
 		return attemptErr
 	}); err != nil {
 		fmt.Printf("TCPS DB Container not ready: %s\n", err)
+		printContainerLogs(container)
 		common.DestroyDockerContainer(container)
 		return
 	}
