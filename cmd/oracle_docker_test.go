@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
 	"net/netip"
 	"os"
 	"time"
@@ -86,6 +87,7 @@ func prepareContainer() (container dockertest.ClosableResource, err error) {
 	}
 	err = WaitForOracle(pool)
 	if err != nil {
+		diagnosePortBinding(container, "1521")
 		printContainerLogs(container)
 		common.DestroyDockerContainer(container)
 		return
@@ -109,6 +111,35 @@ func printContainerLogs(container dockertest.ClosableResource) {
 		return
 	}
 	fmt.Printf("--- container stdout ---\n%s\n--- container stderr ---\n%s\n--- end container logs ---\n", stdout, stderr)
+}
+
+// diagnosePortBinding distinguishes "the container never listened" from "the
+// host-side port publish/forward is broken": it prints what Docker itself
+// believes it published, then dials the container directly on its bridge
+// network IP, bypassing the host port mapping entirely.
+func diagnosePortBinding(container dockertest.ClosableResource, containerPort string) {
+	if container == nil {
+		return
+	}
+	insp := container.Container()
+	if insp.NetworkSettings == nil {
+		fmt.Println("diagnosePortBinding: container has no NetworkSettings")
+		return
+	}
+	fmt.Printf("Docker-reported published ports: %+v\n", insp.NetworkSettings.Ports)
+	for netName, ep := range insp.NetworkSettings.Networks {
+		if ep == nil || !ep.IPAddress.IsValid() {
+			continue
+		}
+		addr := net.JoinHostPort(ep.IPAddress.String(), containerPort)
+		conn, dialErr := net.DialTimeout("tcp", addr, 3*time.Second)
+		if dialErr != nil {
+			fmt.Printf("direct dial to container on %s network (%s) failed: %v\n", netName, addr, dialErr)
+			continue
+		}
+		_ = conn.Close()
+		fmt.Printf("direct dial to container on %s network (%s) SUCCEEDED -> container is reachable, host port publish is broken\n", netName, addr)
+	}
 }
 
 // WaitForOracle waits to successfully connect to Oracle
