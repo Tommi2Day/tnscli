@@ -1,5 +1,15 @@
 # Changelog tnscli
 
+## [v3.10.1 - 2026-10-04]
+### New
+- load SSL settings from `sqlnet.ora` matched to the active `tnsnames.ora`
+### Changed
+- update gomodules to v1.28.0 and refresh its transitive dependencies
+- tests: assign Oracle and LDAP container ports dynamically instead of fixed mappings
+- tests: LDAP test container uses `cleanstart/openldap:latest`
+- tests: print Oracle container logs and dial the bridge IP when the host port is unreachable
+- CI: increase Go test timeout to 25 minutes; run Oracle TCPS tests in a separate job
+
 ## [v3.10.0 - 2026-08-10]
 ### New
 - add tcps support for Oracle connections
