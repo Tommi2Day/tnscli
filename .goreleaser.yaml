@@ -66,6 +66,7 @@ nfpms:
     formats:
       - rpm
       - deb
+      - apk
     # dependencies:
     provides:
       # dont use {{ .ProjectName }} here :(
