@@ -12,7 +12,7 @@ services:
       - "./oracle-db:/container-entrypoint-initdb.d"
 
   ldap:
-    image: "${VENDOR_IMAGE_PREFIX}docker.io/cleanstart/openldap:2.6.13"
+    image: "${VENDOR_IMAGE_PREFIX}docker.io/cleanstart/openldap:latest"
     restart: "no"
     hostname: "ldap.oracle.local"
     ports:
