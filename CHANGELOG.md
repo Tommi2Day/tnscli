@@ -13,10 +13,12 @@
 ## [v3.10.0 - 2026-08-10]
 ### New
 - add tcps support for Oracle connections
+- add `--wallet-password` flag and `TNSCLI_WALLET_PASSWORD` environment variable for PKCS12 wallet (`ewallet.p12`) authentication; not needed for auto-login wallets
 - add apk support
-### Changed
+### Changed 
 - use dockertest v4
 - update dependencies
+- tests: add Oracle TCPS docker test with an orapki-generated wallet and TCPS listener
 
 ## [v3.9.10 - 2026-06-05]
 ### Changed
